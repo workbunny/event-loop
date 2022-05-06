@@ -157,7 +157,9 @@ class EventLoop extends AbstractLoop
                 break;
             }
             $this->_eventBase->loop($flags);
-            usleep(0);
+            if($this->_switching){
+                usleep(0);
+            }
         }
     }
 

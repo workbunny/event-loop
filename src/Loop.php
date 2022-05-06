@@ -9,11 +9,19 @@ use WorkBunny\EventLoop\Drivers\NativeLoop;
 use WorkBunny\EventLoop\Exception\LoopException;
 use WorkBunny\EventLoop\Protocols\AbstractLoop;
 
+/**
+ * Class Loop
+ * @package WorkBunny\EventLoop
+ * @author chaz6chez
+ */
 final class Loop
 {
     const EVENT  = 'event';
     const EV     = 'ev';
     const NATIVE = 'native';
+
+    /** @var bool CPU switching */
+    public static bool $switching = true;
 
     /** @var array|string[]  */
     protected static array $_loops = [
@@ -32,7 +40,7 @@ final class Loop
     public static function factory(string $loop = self::NATIVE): AbstractLoop
     {
         if(isset(self::$_loops[$loop])){
-            self::$_loop = new self::$_loops[$loop];
+            self::$_loop = new self::$_loops[$loop]();
             return self::$_loop;
         }
         throw new LoopException('not found :' . $loop);

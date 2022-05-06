@@ -3,6 +3,11 @@ declare(strict_types=1);
 
 namespace WorkBunny\EventLoop\Utils;
 
+/**
+ * 计数器
+ * @package WorkBunny\EventLoop\Utils
+ * @author chaz6chez
+ */
 final class Counter
 {
     /** @var int id */

@@ -149,7 +149,9 @@ class EvLoop extends AbstractLoop
                 break;
             }
             $this->_loop->run($flags);
-            usleep(0);
+            if($this->_switching){
+                usleep(0);
+            }
         }
     }
 

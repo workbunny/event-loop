@@ -5,6 +5,11 @@ namespace WorkBunny\EventLoop\Utils;
 
 use SplPriorityQueue;
 
+/**
+ * NativeLoop的定时器
+ * @package WorkBunny\EventLoop\Utils
+ * @author chaz6chez
+ */
 final class Timer
 {
     /** @var SplPriorityQueue 创建优先队列 */

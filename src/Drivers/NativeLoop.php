@@ -176,7 +176,9 @@ class NativeLoop extends AbstractLoop
                     $this->_writes[$key]($stream);
                 }
             }
-            usleep(0);
+            if($this->_switching){
+                usleep(0);
+            }
         }
     }
 

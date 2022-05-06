@@ -5,6 +5,11 @@ namespace WorkBunny\EventLoop\Utils;
 
 use SplPriorityQueue;
 
+/**
+ * Class Future
+ * @package WorkBunny\EventLoop\Utils
+ * @author chaz6chez
+ */
 final class Future
 {
     /** @var SplPriorityQueue 创建优先队列 */
