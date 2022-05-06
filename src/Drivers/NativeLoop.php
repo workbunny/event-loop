@@ -160,7 +160,7 @@ class NativeLoop extends AbstractLoop
             }
 
             try {
-                @stream_select($reads, $writes, $excepts, 0, 1000000);
+                @stream_select($reads, $writes, $excepts, 1);
             } catch (\Throwable $e) {}
 
             foreach ($reads as $stream) {
