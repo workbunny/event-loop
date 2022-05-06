@@ -1,5 +1,4 @@
 /.idea
-/.git
 /.vscode
 /vendor
 composer.lock
