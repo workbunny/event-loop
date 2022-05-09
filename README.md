@@ -13,7 +13,7 @@
     It is an event loop component similar to ReactPHP and AMPHP;
 
     This project mainly studies how ext-parallel and PHP-fiber can
-    be effectively combined in event-loop,and studies whether PHP 
+    be effectively combined in event-loop, and studies whether PHP 
     can achieve higher processing power without using extensions 
     like ext-event, ext-ev, ext-uv, etc.
 
