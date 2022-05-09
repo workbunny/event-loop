@@ -1,0 +1,24 @@
+version: '3'
+services:
+  workbunny-php:
+    restart: always
+    container_name: workbunny-php
+    build:
+      context: ./
+    image: workbunny-php
+#    links:
+#      - workbunny-redis
+    ports:
+      - 8000:8000
+      - 8001:8001
+      - 8002:8002
+    volumes:
+      - /d/project:/var/www
+    tty: true
+
+#  workbunny-redis:
+#    restart: always
+#    container_name: workbunny-redis
+#    image: redis:6.2-alpine
+#    ports:
+#      - 6379:6379

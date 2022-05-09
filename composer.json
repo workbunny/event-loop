@@ -26,15 +26,17 @@
     "source": "https://github.com/WorkBunny/event-loop"
   },
   "require": {
-    "php": ">=7.4"
+    "php": ">=8.0"
   },
   "require-dev": {
     "paulxu-cn/event-ide-helper": "dev-master",
+    "chaz6chez/parallel-ide-helper": "dev-main",
     "symfony/var-dumper": "^5.4"
   },
   "suggest": {
     "ext-event": "For EventLoop. ",
     "ext-ev": "For EvLoop. ",
+    "ext-parallel" : "Let NativeLoop support parallel. ",
     "ext-pcntl" : "Let NativeLoop support signal handling. "
   },
   "autoload": {
