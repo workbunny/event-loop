@@ -1,20 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace WorkBunny\EventLoop\Utils;
+namespace EventLoop;
 
-/**
- * 计数器
- * @package WorkBunny\EventLoop\Utils
- * @author chaz6chez
- */
-final class Counter
+final class Storage
 {
     /** @var int id */
     private int $_id = 1;
 
-    /** @var array ids */
-    private array $_ids = [];
+    /** @var array storage */
+    private array $_storage = [];
 
     /**
      * @param mixed $value
@@ -22,8 +17,21 @@ final class Counter
      */
     public function add($value): int
     {
-        $this->_ids[$this->_id] = $value;
+        $this->_storage[$this->_id] = $value;
         return $this->_id ++;
+    }
+
+    /**
+     * @param int $id
+     * @param $value
+     * @return int
+     */
+    public function set(int $id, $value): int
+    {
+        if($this->exist($id)){
+            $this->_storage[$id] = $value;
+        }
+        return $id;
     }
 
     /**
@@ -31,7 +39,7 @@ final class Counter
      */
     public function del(int $id): void
     {
-        unset($this->_ids[$id]);
+        unset($this->_storage[$id]);
     }
 
     /**
@@ -40,7 +48,7 @@ final class Counter
      */
     public function get(int $id)
     {
-        return $this->exist($id) ? $this->_ids[$id] : null;
+        return $this->exist($id) ? $this->_storage[$id] : null;
     }
 
     /**
@@ -57,7 +65,7 @@ final class Counter
      */
     public function exist(int $id): bool
     {
-        return isset($this->_ids[$id]);
+        return isset($this->_storage[$id]);
     }
 
     /**
@@ -65,6 +73,6 @@ final class Counter
      */
     public function isEmpty(): bool
     {
-        return empty($this->_ids);
+        return empty($this->_storage);
     }
 }

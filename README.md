@@ -1,5 +1,17 @@
 # workbunny/event-loop
 
+**A high-performance event loop library for PHP**
+
+## 更新
+
+>    2022-05-09:
+>
+>    目前ext-parallel还未支持PHP8.X，所以该项目仅实现了简单的基于libevent等基于系统I/O复用事件驱动的event-loop；
+>
+>    等待ext-parallel的支撑
+
+## 说明
+
     一个event-loop实验品；
 
     是一个类似ReactPHP、AMPHP的事件循环组件；
@@ -17,10 +29,49 @@
     can achieve higher processing power without using extensions 
     like ext-event, ext-ev, ext-uv, etc.
 
-___
+## 使用
 
-    2022-05-09:
+- 安装
+```
+composer require workbunny/event-loop
+```
 
-    目前ext-parallel还未支持PHP8.X，所以该项目仅实现了简单的基于libevent等基于系统I/O复用事件驱动的event-loop；
-    
-    等待ext-parallel的支撑
+- 定时器
+```php
+$loop = \EventLoop\Factory::create(\EventLoop\Drivers\NativeLoop::class);
+$id = $loop->addTimer(0.0, 1.0, function (){
+    # 业务
+});
+$loop->delTimer($id);
+```
+
+- 流
+```php
+$loop->addReadStream(resource, function (){
+    # 业务
+});
+$loop->delReadStream(resource);
+
+$loop->addWriteStream(resource, function (){
+    # 业务
+});
+$loop->delWriteStream(resource);
+```
+
+- 信号
+```php
+$loop->addSignal(\SIGUSR1, function (){
+    # 业务
+});
+
+$loop->delSignal(\SIGUSR1, function (){
+    # 业务
+});
+```
+
+- 启动/停止
+```php
+$loop->loop();
+
+$loop->destroy();
+```

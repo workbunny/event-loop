@@ -6,47 +6,44 @@
     "ext-ev",
     "ext-event",
     "asynchronous",
-    "reactor",
-    "event-driven"
+    "reactor"
   ],
-  "homepage": "https://github.com/WorkBunny",
+  "homepage": "https://github.com/workbunny",
   "license": "MIT",
-  "description": "A low-level event-driven library for WorkBunny",
+  "description": "A high-performance event loop library for PHP",
   "authors": [
     {
       "name": "chaz6chez",
       "email": "250220719@qq.com",
-      "homepage": "https://github.com/WorkBunny",
+      "homepage": "https://chaz6chez.cn",
       "role": "Developer"
     }
   ],
   "support": {
     "email": "250220719@qq.com",
-    "issues": "https://github.com/WorkBunny/event-loop/issues",
-    "source": "https://github.com/WorkBunny/event-loop"
+    "issues": "https://github.com/workbunny/event-loop/issues",
+    "source": "https://github.com/workbunny/event-loop"
   },
   "require": {
-    "php": ">=8.0"
+    "php": ">=7.4"
   },
   "require-dev": {
     "paulxu-cn/event-ide-helper": "dev-master",
-    "chaz6chez/parallel-ide-helper": "dev-main",
     "symfony/var-dumper": "^5.4"
   },
   "suggest": {
     "ext-event": "For EventLoop. ",
     "ext-ev": "For EvLoop. ",
-    "ext-parallel" : "Let NativeLoop support parallel. ",
     "ext-pcntl" : "Let NativeLoop support signal handling. "
   },
   "autoload": {
     "psr-4": {
-      "WorkBunny\\EventLoop\\": "src"
+      "EventLoop\\": "src"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "WorkBunny\\Test\\": "test"
+      "Test\\": "test"
     }
   }
 }

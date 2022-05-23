@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WorkBunny\EventLoop\Exception;
+namespace EventLoop\Exception;
 
 /**
  * Class LoopException

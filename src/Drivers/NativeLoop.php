@@ -1,13 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace WorkBunny\EventLoop\Drivers;
+namespace EventLoop\Drivers;
 
-use WorkBunny\EventLoop\Exception\LoopException;
-use WorkBunny\EventLoop\Protocols\AbstractLoop;
-use WorkBunny\EventLoop\Utils\Timer;
+use EventLoop\Exception\LoopException;
+use EventLoop\Storage;
 
-class NativeLoop extends AbstractLoop
+class NativeLoop implements LoopInterface
 {
     /** @var resource[] */
     protected array $_readFds;
@@ -15,8 +14,22 @@ class NativeLoop extends AbstractLoop
     /** @var resource[] */
     protected array $_writeFds;
 
-    /** @var Timer timers */
-    protected Timer $_timers;
+    /** @var array All listeners for read event. */
+    protected array $_reads = [];
+
+    /** @var array All listeners for write event. */
+    protected array $_writes = [];
+
+    /** @var array Event listeners of signal. */
+    protected array $_signals = [];
+
+    /** @var Storage 定时器容器 */
+    protected Storage $_storage;
+
+    /** @var \SplPriorityQueue 优先队列 */
+    protected \SplPriorityQueue $_queue;
+
+    protected bool $_stopped = false;
 
     /**
      * Ev constructor.
@@ -24,13 +37,14 @@ class NativeLoop extends AbstractLoop
      */
     public function __construct()
     {
-        $this->_timers = new Timer();
-        $this->_readFds = [];
-        $this->_writeFds = [];
         if(!extension_loaded('pcntl')){
             throw new LoopException('not support: ext-pcntl');
         }
-        parent::__construct();
+        $this->_storage = new Storage();
+        $this->_queue = new \SplPriorityQueue();
+        $this->_queue->setExtractFlags(\SplPriorityQueue::EXTR_BOTH);
+        $this->_readFds = [];
+        $this->_writeFds = [];
     }
 
     /** @inheritDoc */
@@ -98,57 +112,35 @@ class NativeLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function addTimer(float $interval, callable $callback): int
+    public function addTimer(float $delay, float $repeat, callable $callback): int
     {
-        return $this->_timers->add($interval, $callback, false);
-    }
-
-    /** @inheritDoc */
-    public function addPeriodicTimer(float $interval, callable $callback): int
-    {
-        return $this->_timers->add($interval, $callback, true);
+        $runTime = \hrtime(true) * 1e-9 + $delay;
+        $this->_queue->insert($this->_storage->id(), -$runTime);
+        return $this->_storage->add([
+            'delay'    => $delay,
+            'repeat'   => $repeat,
+            'callback' => $callback
+        ]);
     }
 
     /** @inheritDoc */
     public function delTimer(int $timerId): void
     {
-        $this->_timers->del($timerId);
-    }
-
-    /** @inheritDoc */
-    public function addFuture(callable $handler): int
-    {
-        return $this->_future->add($handler);
-    }
-
-    /** @inheritDoc */
-    public function delFuture(int $futureId): void
-    {
-        $this->_future->del($futureId);
+        $this->_storage->del($timerId);
     }
 
     /** @inheritDoc */
     public function loop(): void
     {
-        $this->_stopped = false;
+
         while (!$this->_stopped) {
-            if($this->_stopped){
+            if(!$this->_readFds and !$this->_writeFds and !$this->_signals and $this->_storage->isEmpty()){
                 break;
             }
 
             \pcntl_signal_dispatch();
 
-            $this->_future->tick();
-            $this->_timers->tick();
-
-            if(
-                !$this->_readFds and
-                !$this->_writeFds and
-                $this->_future->isEmpty() and
-                $this->_timers->isEmpty()
-            ){
-                break;
-            }
+            $this->_tick();
 
             $writes = $this->_writeFds;
             $reads = $this->_readFds;
@@ -159,26 +151,27 @@ class NativeLoop extends AbstractLoop
                 }
             }
 
-            try {
-                @stream_select($reads, $writes, $excepts, 1);
-            } catch (\Throwable $e) {}
+            if($writes or $reads or $excepts){
+                try {
+                    @stream_select($reads, $writes, $excepts, 0,1000);
+                } catch (\Throwable $e) {}
 
-            foreach ($reads as $stream) {
-                $key = (int)$stream;
-                if (isset($this->_reads[$key])) {
-                    $this->_reads[$key]($stream);
+                foreach ($reads as $stream) {
+                    $key = (int)$stream;
+                    if (isset($this->_reads[$key])) {
+                        $this->_reads[$key]($stream);
+                    }
+                }
+
+                foreach ($writes as $stream) {
+                    $key = (int)$stream;
+                    if (isset($this->_writes[$key])) {
+                        $this->_writes[$key]($stream);
+                    }
                 }
             }
 
-            foreach ($writes as $stream) {
-                $key = (int)$stream;
-                if (isset($this->_writes[$key])) {
-                    $this->_writes[$key]($stream);
-                }
-            }
-            if($this->_switching){
-                usleep(0);
-            }
+            usleep(0);
         }
     }
 
@@ -186,5 +179,31 @@ class NativeLoop extends AbstractLoop
     public function destroy(): void
     {
         $this->_stopped = true;
+    }
+
+    /** 执行 */
+    protected function _tick(): void
+    {
+        $count = $this->_queue->count();
+        while ($count--){
+            $data = $this->_queue->top();
+            $runTime = -$data['priority'];
+            $timerId = $data['data'];
+            if($data = $this->_storage->get($timerId)){
+                $repeat = $data['repeat'];
+                $callback = $data['callback'];
+                $timeNow = \hrtime(true) * 1e-9;
+                if (($runTime - $timeNow) <= 0) {
+                    $this->_queue->extract();
+                    \call_user_func($callback);
+                    if($repeat !== 0.0){
+                        $nextTime = $timeNow + $repeat;
+                        $this->_queue->insert($timerId, -$nextTime);
+                    }else{
+                        $this->delTimer($timerId);
+                    }
+                }
+            }
+        }
     }
 }
