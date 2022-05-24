@@ -5,6 +5,9 @@ namespace EventLoop\Drivers;
 
 use EventLoop\Exception\LoopException;
 use EventLoop\Storage;
+use EventLoop\Timer;
+use SplPriorityQueue;
+use Closure;
 
 class NativeLoop implements LoopInterface
 {
@@ -26,8 +29,8 @@ class NativeLoop implements LoopInterface
     /** @var Storage 定时器容器 */
     protected Storage $_storage;
 
-    /** @var \SplPriorityQueue 优先队列 */
-    protected \SplPriorityQueue $_queue;
+    /** @var SplPriorityQueue 优先队列 */
+    protected SplPriorityQueue $_queue;
 
     protected bool $_stopped = false;
 
@@ -41,14 +44,14 @@ class NativeLoop implements LoopInterface
             throw new LoopException('not support: ext-pcntl');
         }
         $this->_storage = new Storage();
-        $this->_queue = new \SplPriorityQueue();
-        $this->_queue->setExtractFlags(\SplPriorityQueue::EXTR_BOTH);
+        $this->_queue = new SplPriorityQueue();
+        $this->_queue->setExtractFlags(SplPriorityQueue::EXTR_BOTH);
         $this->_readFds = [];
         $this->_writeFds = [];
     }
 
     /** @inheritDoc */
-    public function addReadStream($stream, callable $handler): void
+    public function addReadStream($stream, Closure $handler): void
     {
         if(is_resource($stream)){
             $key = (int) $stream;
@@ -72,7 +75,7 @@ class NativeLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function addWriteStream($stream, callable $handler): void
+    public function addWriteStream($stream, Closure $handler): void
     {
         if(is_resource($stream)){
             $key = (int) $stream;
@@ -96,7 +99,7 @@ class NativeLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function addSignal(int $signal, callable $handler): void
+    public function addSignal(int $signal, Closure $handler): void
     {
         $this->_signals[$signal] = $handler;
         \pcntl_signal($signal, function($signal){
@@ -105,26 +108,23 @@ class NativeLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function delSignal(int $signal, callable $handler): void
+    public function delSignal(int $signal, Closure $handler): void
     {
         unset($this->_signals[$signal]);
         \pcntl_signal($signal, \SIG_IGN);
     }
 
     /** @inheritDoc */
-    public function addTimer(float $delay, float $repeat, callable $callback): int
+    public function addTimer(float $delay, float $repeat, Closure $callback): string
     {
+        $timer = new Timer($delay, $repeat, $callback);
         $runTime = \hrtime(true) * 1e-9 + $delay;
-        $this->_queue->insert($this->_storage->id(), -$runTime);
-        return $this->_storage->add([
-            'delay'    => $delay,
-            'repeat'   => $repeat,
-            'callback' => $callback
-        ]);
+        $this->_queue->insert($id = spl_object_hash($timer), -$runTime);
+        return $this->_storage->add($id, $timer);
     }
 
     /** @inheritDoc */
-    public function delTimer(int $timerId): void
+    public function delTimer(string $timerId): void
     {
         $this->_storage->del($timerId);
     }
@@ -189,9 +189,10 @@ class NativeLoop implements LoopInterface
             $data = $this->_queue->top();
             $runTime = -$data['priority'];
             $timerId = $data['data'];
+            /** @var Timer $data */
             if($data = $this->_storage->get($timerId)){
-                $repeat = $data['repeat'];
-                $callback = $data['callback'];
+                $repeat = $data->getRepeat();
+                $callback = $data->getHandler();
                 $timeNow = \hrtime(true) * 1e-9;
                 if (($runTime - $timeNow) <= 0) {
                     $this->_queue->extract();

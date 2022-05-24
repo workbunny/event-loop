@@ -6,6 +6,7 @@ namespace EventLoop\Drivers;
 use EventLoop\Exception\LoopException;
 use EventLoop\Storage;
 use EvLoop as BaseEvLoop;
+use Closure;
 
 class EvLoop implements LoopInterface
 {
@@ -38,7 +39,7 @@ class EvLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function addReadStream($stream, callable $handler): void
+    public function addReadStream($stream, Closure $handler): void
     {
         if(is_resource($stream)){
             $event = new \EvIo($stream,\Ev::READ, $handler);
@@ -58,7 +59,7 @@ class EvLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function addWriteStream($stream, callable $handler): void
+    public function addWriteStream($stream, Closure $handler): void
     {
         if(is_resource($stream)){
             $event = new \EvIo($stream, \Ev::WRITE, $handler);
@@ -78,14 +79,14 @@ class EvLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function addSignal(int $signal, callable $handler): void
+    public function addSignal(int $signal, Closure $handler): void
     {
         $event = new \EvSignal($signal, $handler);
         $this->_signals[$signal] = $event;
     }
 
     /** @inheritDoc */
-    public function delSignal(int $signal, callable $handler): void
+    public function delSignal(int $signal, Closure $handler): void
     {
         if(isset($this->_signals[$signal])){
             /** @var \EvSignal $event */
@@ -96,15 +97,14 @@ class EvLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function addTimer(float $delay, float $repeat, callable $callback): int
+    public function addTimer(float $delay, float $repeat, Closure $callback): string
     {
-        return $this->_storage->add(
-            $event = new \EvTimer($delay, $repeat, $callback)
-        );
+        $event = new \EvTimer($delay, $repeat, $callback);
+        return $this->_storage->add(spl_object_hash($event), $event);
     }
 
     /** @inheritDoc */
-    public function delTimer(int $timerId): void
+    public function delTimer(string $timerId): void
     {
         /** @var \EvTimer $event */
         if($event = $this->_storage->get($timerId)){

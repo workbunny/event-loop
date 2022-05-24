@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace EventLoop\Drivers;
 
+use Closure;
 use EventLoop\Exception\LoopException;
 
 interface LoopInterface
@@ -10,25 +11,25 @@ interface LoopInterface
     /**
      * 创建信号处理
      * @param int $signal
-     * @param callable $handler
+     * @param Closure $handler
      * @throws LoopException
      */
-    public function addSignal(int $signal, callable $handler): void;
+    public function addSignal(int $signal, Closure $handler): void;
 
     /**
      * 移除信号处理
      * @param int $signal
-     * @param callable $handler
+     * @param Closure $handler
      */
-    public function delSignal(int $signal, callable $handler): void;
+    public function delSignal(int $signal, Closure $handler): void;
 
     /**
      * 创建读流
      * @param resource $stream
-     * @param callable $handler
+     * @param Closure $handler
      * @throws LoopException
      */
-    public function addReadStream($stream, callable $handler): void;
+    public function addReadStream($stream, Closure $handler): void;
 
     /**
      * 移除读流
@@ -39,10 +40,10 @@ interface LoopInterface
     /**
      * 创建写流
      * @param resource $stream
-     * @param callable $handler
+     * @param Closure $handler
      * @throws LoopException
      */
-    public function addWriteStream($stream, callable $handler): void;
+    public function addWriteStream($stream, Closure $handler): void;
 
     /**
      * 移除写流
@@ -54,16 +55,16 @@ interface LoopInterface
      * 创建定时器
      * @param float $delay
      * @param float $repeat
-     * @param callable $callback
-     * @return int
+     * @param Closure $callback
+     * @return string
      */
-    public function addTimer(float $delay, float $repeat, callable $callback): int;
+    public function addTimer(float $delay, float $repeat, Closure $callback): string;
 
     /**
      * 移除定时触发器
-     * @param int $timerId
+     * @param string $timerId
      */
-    public function delTimer(int $timerId): void;
+    public function delTimer(string $timerId): void;
 
     /**
      * main loop.

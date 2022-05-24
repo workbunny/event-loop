@@ -5,67 +5,70 @@ namespace EventLoop;
 
 final class Storage
 {
-    /** @var int id */
-    private int $_id = 1;
+    /** @var int  */
+    private int $_count = 0;
 
     /** @var array storage */
     private array $_storage = [];
 
     /**
-     * @param mixed $value
-     * @return int
+     * @param string $key
+     * @param mixed|null $value
+     * @return string
      */
-    public function add($value): int
+    public function add(string $key, $value): string
     {
-        $this->_storage[$this->_id] = $value;
-        return $this->_id ++;
+        $this->_storage[$key] = $value;
+        $this->_count ++;
+        return $key;
     }
 
     /**
-     * @param int $id
-     * @param $value
-     * @return int
+     * @param string $key
+     * @param mixed|null $value
+     * @return string
      */
-    public function set(int $id, $value): int
+    public function set(string $key, $value): string
     {
-        if($this->exist($id)){
-            $this->_storage[$id] = $value;
+        if($this->exist($key)){
+            $this->_storage[$key] = $value;
         }
-        return $id;
+        return $key;
     }
 
     /**
-     * @param int $id
+     * @param string $key
      */
-    public function del(int $id): void
+    public function del(string $key): void
     {
-        unset($this->_storage[$id]);
+        unset($this->_storage[$key]);
+        $this->_count --;
     }
 
     /**
-     * @param int $id
+     * @param string $key
      * @return mixed|null
      */
-    public function get(int $id)
+    public function get(string $key)
     {
-        return $this->exist($id) ? $this->_storage[$id] : null;
+        return $this->exist($key) ? $this->_storage[$key] : null;
     }
 
     /**
      * @return int
      */
-    public function id(): int
+    public function count(): int
     {
-        return $this->_id;
+        return $this->_count;
     }
 
     /**
-     * @param int $id
+     * @param string $key
      * @return bool
      */
-    public function exist(int $id): bool
+    public function exist(string $key): bool
     {
-        return isset($this->_storage[$id]);
+        return isset($this->_storage[$key]);
     }
 
     /**

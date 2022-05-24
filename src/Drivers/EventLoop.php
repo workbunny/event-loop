@@ -7,6 +7,7 @@ use EventConfig;
 use EventBase;
 use Event;
 use EventLoop\Storage;
+use Closure;
 
 class EventLoop implements LoopInterface
 {
@@ -36,7 +37,7 @@ class EventLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function addReadStream($stream, callable $handler): void
+    public function addReadStream($stream, Closure $handler): void
     {
         if(is_resource($stream)){
             $event = new Event($this->_eventBase, $stream, \Event::READ | \Event::PERSIST, $handler);
@@ -58,7 +59,7 @@ class EventLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function addWriteStream($stream, callable $handler): void
+    public function addWriteStream($stream, Closure $handler): void
     {
         if(is_resource($stream)){
             $event = new Event($this->_eventBase, $stream, Event::WRITE | Event::PERSIST, $handler);
@@ -80,7 +81,7 @@ class EventLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function addSignal(int $signal, callable $handler): void
+    public function addSignal(int $signal, Closure $handler): void
     {
         $event = Event::signal($this->_eventBase, $signal, $handler);
         if ($event or $event->add()) {
@@ -90,7 +91,7 @@ class EventLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function delSignal(int $signal, callable $handler): void
+    public function delSignal(int $signal, Closure $handler): void
     {
         if(isset($this->_signals[$signal])){
             /** @var Event $event */
@@ -101,11 +102,11 @@ class EventLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function addTimer(float $delay, float $repeat, callable $callback): int
+    public function addTimer(float $delay, float $repeat, Closure $callback): string
     {
-        $id = $this->_storage->id();
+        $event = new Event($this->_eventBase, -1, \Event::TIMEOUT, function () use(&$event, $repeat, $callback){
+            $id = spl_object_hash($event);
 
-        $event = new Event($this->_eventBase, -1, \Event::TIMEOUT, function () use($repeat, $id, $callback){
             $callback();
 
             if($repeat === 0.0){
@@ -115,15 +116,14 @@ class EventLoop implements LoopInterface
                 $event->add($repeat);
                 $this->_storage->set($id, $event);
             }
-
         });
         $event->add($delay);
 
-        return $this->_storage->add($event);
+        return $this->_storage->add(spl_object_hash($event), $event);
     }
 
     /** @inheritDoc */
-    public function delTimer(int $timerId): void
+    public function delTimer(string $timerId): void
     {
         /** @var Event $events */
         if($event = $this->_storage->get($timerId)){
