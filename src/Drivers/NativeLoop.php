@@ -1,49 +1,29 @@
 <?php
 declare(strict_types=1);
 
-namespace EventLoop\Drivers;
+namespace WorkBunny\EventLoop\Drivers;
 
-use EventLoop\Exception\LoopException;
-use EventLoop\Storage;
-use EventLoop\Timer;
+use WorkBunny\EventLoop\Exception\LoopException;
+use WorkBunny\EventLoop\Timer;
 use SplPriorityQueue;
 use Closure;
 
-class NativeLoop implements LoopInterface
+class NativeLoop extends AbstractLoop
 {
-    /** @var resource[] */
-    protected array $_readFds;
-
-    /** @var resource[] */
-    protected array $_writeFds;
-
-    /** @var array All listeners for read event. */
-    protected array $_reads = [];
-
-    /** @var array All listeners for write event. */
-    protected array $_writes = [];
-
-    /** @var array Event listeners of signal. */
-    protected array $_signals = [];
-
-    /** @var Storage 定时器容器 */
-    protected Storage $_storage;
-
     /** @var SplPriorityQueue 优先队列 */
     protected SplPriorityQueue $_queue;
 
+    /** @var bool  */
     protected bool $_stopped = false;
 
-    /**
-     * Ev constructor.
-     * @throws LoopException
-     */
+    /** @inheritDoc */
     public function __construct()
     {
         if(!extension_loaded('pcntl')){
             throw new LoopException('not support: ext-pcntl');
         }
-        $this->_storage = new Storage();
+        parent::__construct();
+
         $this->_queue = new SplPriorityQueue();
         $this->_queue->setExtractFlags(SplPriorityQueue::EXTR_BOTH);
         $this->_readFds = [];
@@ -53,20 +33,16 @@ class NativeLoop implements LoopInterface
     /** @inheritDoc */
     public function addReadStream($stream, Closure $handler): void
     {
-        if(is_resource($stream)){
-            $key = (int) $stream;
-            if (!isset($this->_readFds[$key])) {
-                $this->_readFds[$key] = $stream;
-                $this->_reads[$key] = $handler;
-            }
+        if(is_resource($stream) and !isset($this->_readFds[$key = (int)$stream])){
+            $this->_readFds[$key] = $stream;
+            $this->_reads[$key] = $handler;
         }
     }
 
     /** @inheritDoc */
     public function delReadStream($stream): void
     {
-        if(is_resource($stream)){
-            $key = (int)$stream;
+        if(is_resource($stream) and isset($this->_readFds[$key = (int)$stream])){
             unset(
                 $this->_reads[$key],
                 $this->_readFds[$key]
@@ -77,20 +53,16 @@ class NativeLoop implements LoopInterface
     /** @inheritDoc */
     public function addWriteStream($stream, Closure $handler): void
     {
-        if(is_resource($stream)){
-            $key = (int) $stream;
-            if (!isset($this->_writeFds[$key])) {
-                $this->_writeFds[$key] = $stream;
-                $this->_writes[$key] = $handler;
-            }
+        if(is_resource($stream) and !isset($this->_writeFds[$key = (int) $stream])){
+            $this->_writeFds[$key] = $stream;
+            $this->_writes[$key] = $handler;
         }
     }
 
     /** @inheritDoc */
     public function delWriteStream($stream): void
     {
-        if(is_resource($stream)){
-            $key = (int)$stream;
+        if(is_resource($stream) and isset($this->_writeFds[$key = (int)$stream])){
             unset(
                 $this->_writes[$key],
                 $this->_writeFds[$key]
@@ -108,7 +80,7 @@ class NativeLoop implements LoopInterface
     }
 
     /** @inheritDoc */
-    public function delSignal(int $signal, Closure $handler): void
+    public function delSignal(int $signal): void
     {
         unset($this->_signals[$signal]);
         \pcntl_signal($signal, \SIG_IGN);
@@ -132,6 +104,7 @@ class NativeLoop implements LoopInterface
     /** @inheritDoc */
     public function loop(): void
     {
+        $this->_stopped = false;
 
         while (!$this->_stopped) {
             if(!$this->_readFds and !$this->_writeFds and !$this->_signals and $this->_storage->isEmpty()){
@@ -139,8 +112,6 @@ class NativeLoop implements LoopInterface
             }
 
             \pcntl_signal_dispatch();
-
-            $this->_tick();
 
             $writes = $this->_writeFds;
             $reads = $this->_readFds;
@@ -153,23 +124,25 @@ class NativeLoop implements LoopInterface
 
             if($writes or $reads or $excepts){
                 try {
-                    @stream_select($reads, $writes, $excepts, 0,1000);
+                    @stream_select($reads, $writes, $excepts, 0,0);
                 } catch (\Throwable $e) {}
 
                 foreach ($reads as $stream) {
                     $key = (int)$stream;
                     if (isset($this->_reads[$key])) {
-                        $this->_reads[$key]($stream);
+                        ($this->_reads[$key])($stream);
                     }
                 }
 
                 foreach ($writes as $stream) {
                     $key = (int)$stream;
                     if (isset($this->_writes[$key])) {
-                        $this->_writes[$key]($stream);
+                        ($this->_writes[$key])($stream);
                     }
                 }
             }
+
+            $this->_tick();
 
             usleep(0);
         }

@@ -1,18 +1,26 @@
 <?php
 declare(strict_types=1);
 
-namespace EventLoop;
+namespace WorkBunny\EventLoop;
 
 use Closure;
 
 final class Timer
 {
+    /** @var float 延迟 */
     private float $delay;
 
+    /** @var float 重复 */
     private float $repeat;
 
+    /** @var Closure 处理函数 */
     private Closure $handler;
 
+    /**
+     * @param float $delay
+     * @param float $repeat
+     * @param Closure $handler
+     */
     public function __construct(float $delay, float $repeat, Closure $handler)
     {
         $this->delay = $delay;

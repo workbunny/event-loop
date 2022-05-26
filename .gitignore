@@ -2,4 +2,3 @@
 /.vscode
 /vendor
 composer.lock
-start.php

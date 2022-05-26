@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace EventLoop\Drivers;
+namespace WorkBunny\EventLoop\Drivers;
 
 use Closure;
-use EventLoop\Exception\LoopException;
+use WorkBunny\EventLoop\Exception\LoopException;
 
 interface LoopInterface
 {
@@ -19,9 +19,8 @@ interface LoopInterface
     /**
      * 移除信号处理
      * @param int $signal
-     * @param Closure $handler
      */
-    public function delSignal(int $signal, Closure $handler): void;
+    public function delSignal(int $signal): void;
 
     /**
      * 创建读流

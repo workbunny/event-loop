@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace EventLoop;
+namespace WorkBunny\EventLoop;
 
 final class Storage
 {

@@ -1,95 +1,119 @@
 <?php
 declare(strict_types=1);
 
-namespace EventLoop\Drivers;
+namespace WorkBunny\EventLoop\Drivers;
 
-use EventLoop\Exception\LoopException;
-use EventLoop\Storage;
+use Ev;
+use EvIo;
+use EvSignal;
+use EvTimer;
+use WorkBunny\EventLoop\Exception\LoopException;
 use EvLoop as BaseEvLoop;
 use Closure;
 
-class EvLoop implements LoopInterface
+class EvLoop extends AbstractLoop
 {
-    /** @var array All listeners for read event. */
-    protected array $_reads = [];
-
-    /** @var array All listeners for write event. */
-    protected array $_writes = [];
-
-    /** @var array Event listeners of signal. */
-    protected array $_signals = [];
-
     /** @var BaseEvLoop loop */
     protected BaseEvLoop $_loop;
 
-    /** @var Storage 计数器 */
-    protected Storage $_storage;
-
-    /**
-     * Ev constructor.
-     * @throws LoopException
-     */
+    /** @inheritDoc */
     public function __construct()
     {
         if(!extension_loaded('ev')){
             throw new LoopException('ext-ev not support');
         }
-        $this->_storage = new Storage();
+
+        parent::__construct();
+
         $this->_loop = new BaseEvLoop();
     }
 
     /** @inheritDoc */
     public function addReadStream($stream, Closure $handler): void
     {
-        if(is_resource($stream)){
-            $event = new \EvIo($stream,\Ev::READ, $handler);
-            $this->_reads[(int)$stream] = $event;
+        if(is_resource($stream) and !isset($this->_reads[$key = (int)$stream])){
+            $event = $this->_loop->io($stream, Ev::READ, $handler);
+            $this->_reads[$key] = $event;
+            $this->_readFds[spl_object_hash($event)] = $stream;
         }
     }
 
-    /** @inheritDoc */
+    /**
+     * @param resource|EvIo $stream
+     * @return void
+     */
     public function delReadStream($stream): void
     {
-        if(is_resource($stream) and isset($this->_reads[(int)$stream])){
-            /** @var \EvIo $event */
-            $event = $this->_reads[(int)$stream];
+        if(is_resource($stream) and isset($this->_reads[$key = (int)$stream])){
+            /** @var EvIo $event */
+            $event = $this->_reads[$key];
             $event->stop();
-            unset($this->_reads[(int)$stream]);
+            unset(
+                $this->_reads[$key],
+                $this->_readFds[spl_object_hash($event)]
+            );
+        }
+
+        if($stream instanceof EvIo and isset($this->_readFds[spl_object_hash($stream)])){
+            $stream->stop();
+            $key = (int)($this->_readFds[spl_object_hash($stream)]);
+            unset(
+                $this->_reads[$key],
+                $this->_readFds[spl_object_hash($stream)]
+            );
         }
     }
 
     /** @inheritDoc */
     public function addWriteStream($stream, Closure $handler): void
     {
-        if(is_resource($stream)){
-            $event = new \EvIo($stream, \Ev::WRITE, $handler);
-            $this->_writes[(int)$stream] = $event;
+        if(is_resource($stream) and !isset($this->_writes[$key = (int)$stream])){
+            $event = $this->_loop->io($stream, Ev::WRITE, $handler);
+            $this->_writes[$key] = $event;
+            $this->_writeFds[spl_object_hash($event)] = $stream;
         }
     }
 
-    /** @inheritDoc */
+    /**
+     * @param EvIo|resource $stream
+     * @return void
+     */
     public function delWriteStream($stream): void
     {
-        if(is_resource($stream) and isset($this->_writes[(int)$stream])){
-            /** @var \EvIo $event */
-            $event = $this->_writes[(int)$stream];
+        if(is_resource($stream) and isset($this->_writes[$key = (int)$stream])){
+            /** @var EvIo $event */
+            $event = $this->_writes[$key];
             $event->stop();
-            unset($this->_writes[(int)$stream]);
+            unset(
+                $this->_writes[$key],
+                $this->_writeFds[spl_object_hash($event)]
+            );
+        }
+
+        if($stream instanceof EvIo and isset($this->_writeFds[spl_object_hash($stream)])){
+            $stream->stop();
+            $key = (int)($this->_writeFds[spl_object_hash($stream)]);
+            unset(
+                $this->_writes[$key],
+                $this->_writeFds[spl_object_hash($stream)]
+            );
         }
     }
 
     /** @inheritDoc */
     public function addSignal(int $signal, Closure $handler): void
     {
-        $event = new \EvSignal($signal, $handler);
-        $this->_signals[$signal] = $event;
+        if(!isset($this->_signals[$signal])){
+            $event = $this->_loop->signal($signal, $handler);
+            $this->_signals[$signal] = $event;
+        }
     }
 
     /** @inheritDoc */
-    public function delSignal(int $signal, Closure $handler): void
+    public function delSignal(int $signal): void
     {
         if(isset($this->_signals[$signal])){
-            /** @var \EvSignal $event */
+            /** @var EvSignal $event */
             $event = $this->_signals[$signal];
             $event->stop();
             unset($this->_signals[$signal]);
@@ -99,14 +123,14 @@ class EvLoop implements LoopInterface
     /** @inheritDoc */
     public function addTimer(float $delay, float $repeat, Closure $callback): string
     {
-        $event = new \EvTimer($delay, $repeat, $callback);
+        $event = $this->_loop->timer($delay, $repeat, $callback);
         return $this->_storage->add(spl_object_hash($event), $event);
     }
 
     /** @inheritDoc */
     public function delTimer(string $timerId): void
     {
-        /** @var \EvTimer $event */
+        /** @var EvTimer $event */
         if($event = $this->_storage->get($timerId)){
             $event->stop();
             $this->_storage->del($timerId);

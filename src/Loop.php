@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace EventLoop;
+namespace WorkBunny\EventLoop;
 
-use EventLoop\Drivers\EvLoop;
-use EventLoop\Drivers\LoopInterface;
-use EventLoop\Drivers\NativeLoop;
-use EventLoop\Drivers\EventLoop;
-use EventLoop\Exception\LoopException;
+use WorkBunny\EventLoop\Drivers\EvLoop;
+use WorkBunny\EventLoop\Drivers\LoopInterface;
+use WorkBunny\EventLoop\Drivers\NativeLoop;
+use WorkBunny\EventLoop\Drivers\EventLoop;
+use WorkBunny\EventLoop\Exception\LoopException;
 
-final class Factory
+final class Loop
 {
     /** @var LoopInterface|null */
     protected static ?LoopInterface $_loop = null;

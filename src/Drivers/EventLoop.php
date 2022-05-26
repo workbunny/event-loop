@@ -1,48 +1,42 @@
 <?php
 declare(strict_types=1);
 
-namespace EventLoop\Drivers;
+namespace WorkBunny\EventLoop\Drivers;
 
 use EventConfig;
 use EventBase;
 use Event;
-use EventLoop\Storage;
+use WorkBunny\EventLoop\Exception\LoopException;
 use Closure;
 
-class EventLoop implements LoopInterface
+class EventLoop extends AbstractLoop
 {
-    /** @var array All listeners for read event. */
-    protected array $_reads = [];
-
-    /** @var array All listeners for write event. */
-    protected array $_writes = [];
-
-    /** @var array Event listeners of signal. */
-    protected array $_signals = [];
-
     /** @var EventBase  */
     protected EventBase $_eventBase;
 
-    /** @var Storage 定时器容器 */
-    protected Storage $_storage;
-
+    /** @inheritDoc */
     public function __construct()
     {
+        if(!extension_loaded('event')){
+            throw new LoopException('ext-event not support');
+        }
+
+        parent::__construct();
         $config = new EventConfig();
         if (\DIRECTORY_SEPARATOR !== '\\') {
             $config->requireFeatures(\EventConfig::FEATURE_FDS);
         }
-        $this->_storage = new Storage();
         $this->_eventBase = new EventBase($config);
     }
 
     /** @inheritDoc */
     public function addReadStream($stream, Closure $handler): void
     {
-        if(is_resource($stream)){
+        if(is_resource($stream) and !isset($this->_readFds[$key = (int)$stream])){
             $event = new Event($this->_eventBase, $stream, \Event::READ | \Event::PERSIST, $handler);
             if ($event->add()) {
-                $this->_reads[(int)$stream] = $event;
+                $this->_reads[$key] = $event;
+                $this->_readFds[$key] = $stream;
             }
         }
     }
@@ -50,21 +44,25 @@ class EventLoop implements LoopInterface
     /** @inheritDoc */
     public function delReadStream($stream): void
     {
-        if(is_resource($stream) and !empty($this->_reads[(int)$stream])){
+        if(is_resource($stream) and !empty($this->_reads[$key = (int)$stream])){
             /** @var Event $event */
-            $event = $this->_reads[(int)$stream];
-            $event->del();
-            unset($this->_reads[(int)$stream]);
+            $event = $this->_reads[$key];
+            $event->free();
+            unset(
+                $this->_reads[$key],
+                $this->_readFds[$key]
+            );
         }
     }
 
     /** @inheritDoc */
     public function addWriteStream($stream, Closure $handler): void
     {
-        if(is_resource($stream)){
+        if(is_resource($stream) and !isset($this->_writeFds[$key = (int)$stream])){
             $event = new Event($this->_eventBase, $stream, Event::WRITE | Event::PERSIST, $handler);
             if ($event->add()) {
-                $this->_writes[(int)$stream] = $event;
+                $this->_writes[$key] = $event;
+                $this->_writeFds[$key] = $stream;
             }
         }
     }
@@ -72,26 +70,30 @@ class EventLoop implements LoopInterface
     /** @inheritDoc */
     public function delWriteStream($stream): void
     {
-        if(is_resource($stream) and isset($this->_writes[(int)$stream])){
+        if(is_resource($stream) and isset($this->_writes[$key = (int)$stream])){
             /** @var Event $event */
             $event = $this->_writes[(int)$stream];
             $event->del();
-            unset($this->_writes[(int)$stream]);
+            unset(
+                $this->_writes[$key],
+                $this->_writeFds[$key]
+            );
         }
     }
 
     /** @inheritDoc */
     public function addSignal(int $signal, Closure $handler): void
     {
-        $event = Event::signal($this->_eventBase, $signal, $handler);
-        if ($event or $event->add()) {
-            $this->_signals[$signal] = $event;
+        if(!isset($this->_signals[$signal])){
+            $event = new Event($this->_eventBase, $signal, Event::SIGNAL | Event::PERSIST, $handler);
+            if ($event->add()) {
+                $this->_signals[$signal] = $event;
+            }
         }
-
     }
 
     /** @inheritDoc */
-    public function delSignal(int $signal, Closure $handler): void
+    public function delSignal(int $signal): void
     {
         if(isset($this->_signals[$signal])){
             /** @var Event $event */

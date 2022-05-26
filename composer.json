@@ -29,7 +29,8 @@
   },
   "require-dev": {
     "paulxu-cn/event-ide-helper": "dev-master",
-    "symfony/var-dumper": "^5.4"
+    "phpunit/phpunit": "^9.0",
+    "symfony/var-dumper": "^5.0"
   },
   "suggest": {
     "ext-event": "For EventLoop. ",
@@ -38,12 +39,12 @@
   },
   "autoload": {
     "psr-4": {
-      "EventLoop\\": "src"
+      "WorkBunny\\EventLoop\\": "src"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Test\\": "test"
+      "WorkBunny\\Test\\": "test"
     }
   }
 }

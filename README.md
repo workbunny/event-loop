@@ -37,8 +37,9 @@ composer require workbunny/event-loop
 ```
 
 - 定时器
+
 ```php
-$loop = \EventLoop\Factory::create(\EventLoop\Drivers\NativeLoop::class);
+$loop = \WorkBunny\EventLoop\Loop::create(\WorkBunny\EventLoop\Drivers\NativeLoop::class);
 $id = $loop->addTimer(0.0, 1.0, function (){
     # 业务
 });
