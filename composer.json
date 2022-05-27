@@ -29,8 +29,9 @@
   },
   "require-dev": {
     "paulxu-cn/event-ide-helper": "dev-master",
-    "phpunit/phpunit": "^9.0",
-    "symfony/var-dumper": "^5.0"
+    "openswoole/ide-helper": "dev-master",
+    "symfony/var-dumper": "^5.0",
+    "phpunit/phpunit": "^9.0"
   },
   "suggest": {
     "ext-event": "For EventLoop. ",

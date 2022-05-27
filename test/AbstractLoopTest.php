@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace WorkBunny\Test;
 
+use Swoole\Process;
 use WorkBunny\EventLoop\Drivers\AbstractLoop;
 use WorkBunny\EventLoop\Drivers\EvLoop;
 
@@ -953,20 +954,22 @@ abstract class AbstractLoopTest extends AbstractTest
     /** 无延迟单次定时器嵌套 */
     public function testNonDelayOneShotTimerNesting()
     {
+        $string = '';
         $this->loop->addTimer(0.0,0.0,
-            function () {
+            function () use(&$string){
                 $this->loop->addTimer(0.0,0.0,
-                    function () {
-                        echo 'non-delay one-shot timer' . PHP_EOL;
+                    function () use(&$string){
+                        $string = 'non-delay one-shot timer' . PHP_EOL;
                         $this->loop->destroy();
                     }
                 );
             }
         );
-
-        $this->expectOutputString('non-delay one-shot timer' . PHP_EOL);
-
         $this->loop->loop();
+
+        $this->assertEquals('non-delay one-shot timer' . PHP_EOL , $string);
+
+
     }
 
     /** 无延迟单次定时器在BIO之后触发 */
@@ -977,19 +980,20 @@ abstract class AbstractLoopTest extends AbstractTest
         }
         list ($stream) = $this->createSocketPair();
         stream_set_blocking($stream, true);
+        $string = '';
         $this->loop->addTimer(0.0,0.0,
-            function () {
-                echo 'non-delay one-shot timer' . PHP_EOL;
+            function () use (&$string){
+                $string .= 'non-delay one-shot timer' . PHP_EOL;
             }
         );
         $this->loop->addWriteStream(
             $stream,
-            function () {
-                echo 'stream' . PHP_EOL;
+            function () use (&$string){
+                 $string .= 'stream' . PHP_EOL;
             }
         );
-        $this->expectOutputString('stream' . PHP_EOL . 'non-delay one-shot timer' . PHP_EOL);
         $this->tickLoop();
+        $this->assertEquals('stream' . PHP_EOL . 'non-delay one-shot timer' . PHP_EOL, $string);
     }
 
     /** 无延迟单次定时器在NIO之后触发 */
@@ -1000,22 +1004,20 @@ abstract class AbstractLoopTest extends AbstractTest
         }
         list ($stream) = $this->createSocketPair();
         stream_set_blocking($stream, false);
+        $string = '';
         $this->loop->addTimer(0.0,0.0,
-            function () {
-                echo 'non-delay one-shot timer' . PHP_EOL;
+            function () use (&$string){
+                $string .= 'non-delay one-shot timer' . PHP_EOL;
             }
         );
-
         $this->loop->addWriteStream(
             $stream,
-            function () {
-                echo 'stream' . PHP_EOL;
+            function () use (&$string){
+                $string .= 'stream' . PHP_EOL;
             }
         );
-
-        $this->expectOutputString('stream' . PHP_EOL . 'non-delay one-shot timer' . PHP_EOL);
-
         $this->tickLoop();
+        $this->assertEquals('stream' . PHP_EOL . 'non-delay one-shot timer' . PHP_EOL, $string);
     }
 
     /** 定时器最大间隔 */
@@ -1035,7 +1037,7 @@ abstract class AbstractLoopTest extends AbstractTest
     /** @runInSeparateProcess 移除一个未注册的信号 */
     public function testDelSignalNotRegisteredIsNoOp()
     {
-        $this->loop->delSignal(2, function () {});
+        $this->loop->delSignal(2);
         $this->assertTrue(true);
     }
 
@@ -1084,19 +1086,17 @@ abstract class AbstractLoopTest extends AbstractTest
         }
         $funcCallCount = 0;
 
-        $this->loop->addTimer(1.0,0.0, function () {});
-
         $this->loop->addSignal(10, $func = function () use (&$funcCallCount) {
             $funcCallCount ++;
         });
         $this->loop->addSignal(10, $func);
 
-        $this->loop->addTimer(0.4,0.0, function () {
+        $this->loop->addTimer(0.0,0.0, function () {
             posix_kill(posix_getpid(), 10);
         });
 
-        $this->loop->addTimer(0.9,0.0, function () use (&$func) {
-            $this->loop->delSignal(10, $func);
+        $this->loop->addTimer(0.1,0.0, function (){
+            $this->loop->delSignal(10);
             $this->loop->destroy();
         });
 

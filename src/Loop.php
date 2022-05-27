@@ -7,6 +7,7 @@ use WorkBunny\EventLoop\Drivers\EvLoop;
 use WorkBunny\EventLoop\Drivers\LoopInterface;
 use WorkBunny\EventLoop\Drivers\NativeLoop;
 use WorkBunny\EventLoop\Drivers\EventLoop;
+use WorkBunny\EventLoop\Drivers\OpenSwooleLoop;
 use WorkBunny\EventLoop\Exception\LoopException;
 
 final class Loop
@@ -18,7 +19,8 @@ final class Loop
     protected static array $_drivers = [
         EventLoop::class,
         EvLoop::class,
-        NativeLoop::class
+        NativeLoop::class,
+        OpenSwooleLoop::class
     ];
 
     /**

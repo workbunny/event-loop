@@ -73,17 +73,21 @@ class NativeLoop extends AbstractLoop
     /** @inheritDoc */
     public function addSignal(int $signal, Closure $handler): void
     {
-        $this->_signals[$signal] = $handler;
-        \pcntl_signal($signal, function($signal){
-            $this->_signals[$signal]($signal);
-        });
+        if(!isset($this->_signals[$signal])){
+            $this->_signals[$signal] = $handler;
+            \pcntl_signal($signal, function($signal){
+                $this->_signals[$signal]($signal);
+            });
+        }
     }
 
     /** @inheritDoc */
     public function delSignal(int $signal): void
     {
-        unset($this->_signals[$signal]);
-        \pcntl_signal($signal, \SIG_IGN);
+        if(isset($this->_signals[$signal])){
+            unset($this->_signals[$signal]);
+            \pcntl_signal($signal, \SIG_IGN);
+        }
     }
 
     /** @inheritDoc */
