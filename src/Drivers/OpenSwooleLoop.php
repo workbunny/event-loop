@@ -73,12 +73,8 @@ class OpenSwooleLoop extends AbstractLoop
     {
         if(!isset($this->_signals[$signal])){
             $this->_signals[$signal] = $handler;
-//            \pcntl_signal($signal, function($signal){
-//                $this->_signals[$signal]($signal);
-//            });
-            if(Process::signal($signal, $handler)){
-                $this->_signals[$signal] = $handler;
-            }
+//            \pcntl_signal($signal, $handler);
+            Process::signal($signal, $handler);
         }
     }
 
@@ -88,9 +84,7 @@ class OpenSwooleLoop extends AbstractLoop
         if(isset($this->_signals[$signal])){
             unset($this->_signals[$signal]);
 //            \pcntl_signal($signal, \SIG_IGN);
-            if(Process::signal($signal, function (){})){
-                unset($this->_signals[$signal]);
-            }# 模拟 SIG_IGN
+            Process::signal($signal, function (){});# 模拟 SIG_IGN
         }
     }
 

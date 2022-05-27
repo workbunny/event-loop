@@ -3,9 +3,17 @@ declare(strict_types=1);
 
 namespace WorkBunny\Test;
 
-use Swoole\Process;
 use WorkBunny\EventLoop\Drivers\OpenSwooleLoop;
 
+/**
+ * 在测试OpenSwoole拓展的过程中，我有一个感受：
+ *  它的Event给我的感觉是和signal以及Timer在底层是隔离的，
+ *  这也可能是因为其包含了一个调度协程的线程和主线程的原因，
+ *  Event肯定是在一个循环中做的一系列响应，但signal或者
+ *  timer可能不一定在这个循环中，有可能是在协程线程里做的
+ *  响应，从而影响主体进程。
+ *  当然，这以上都是我的猜测。
+ */
 class OpenSwooleLoopTest extends AbstractLoopTest
 {
     /** 创建循环 */
@@ -165,16 +173,7 @@ class OpenSwooleLoopTest extends AbstractLoopTest
         $this->assertEquals(1, $count);
     }
 
-    /**
-     * 测试信号响应
-     * 无论如何忽略全局变量备份，始终会抛出一下错误
-     * PHPUnit\Framework\Exception: Fatal error: Uncaught Exception: Serialization of 'Closure' is not allowed in Standard input code:313
-     *
-     * @runInSeparateProcess
-     * @backupStaticAttributes disabled
-     * @backupGlobals disabled
-     *
-     */
+    /** runInSeparateProcess 测试信号相应 */
     public function testSignalResponse()
     {
         if (
@@ -201,7 +200,13 @@ class OpenSwooleLoopTest extends AbstractLoopTest
             posix_kill(posix_getpid(), 10);
         });
 
+        # 猜测是因为发送信号会被转为异步的缘故，所以当去除这个timer时，则不满足预期
+        # 但是不可以使用Event::defer，这里的无延迟定时器使用的就是Event::defer
+//        $this->loop->addTimer(0.0,0.0, function (){});
+        $this->loop->addTimer(0.1,0.0, function (){});
+
         $this->loop->loop();
+
 
         $this->assertEquals(0, $count1);
         $this->assertEquals(1, $count2);
@@ -218,19 +223,21 @@ class OpenSwooleLoopTest extends AbstractLoopTest
         }
         $funcCallCount = 0;
 
-        $this->loop->addSignal(10, $func = function () use (&$funcCallCount) {
+        $this->loop->addSignal(10, function () use (&$funcCallCount) {
             $funcCallCount ++;
+            $this->loop->delSignal(10);
+            $this->loop->destroy();
         });
-        $this->loop->addSignal(10, $func);
+        $this->loop->addSignal(10, function(){});
 
         $this->loop->addTimer(0.0,0.0, function () {
             posix_kill(posix_getpid(), 10);
         });
 
-        $this->loop->addTimer(0.1,0.0, function (){
-            $this->loop->delSignal(10);
-            $this->loop->destroy();
-        });
+        # 猜测是因为发送信号会被转为异步的缘故，所以当去除这个timer时，则不满足预期
+        # 但是不可以使用Event::defer，这里的无延迟定时器使用的就是Event::defer
+//        $this->loop->addTimer(0.0,0.0, function (){});
+        $this->loop->addTimer(0.1,0.0, function (){});
 
         $this->loop->loop();
 
