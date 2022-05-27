@@ -173,7 +173,7 @@ class OpenSwooleLoopTest extends AbstractLoopTest
         $this->assertEquals(1, $count);
     }
 
-    /** runInSeparateProcess 测试信号相应 */
+    /** @runInSeparateProcess 测试信号相应 */
     public function testSignalResponse()
     {
         if (
@@ -203,7 +203,7 @@ class OpenSwooleLoopTest extends AbstractLoopTest
         # 猜测是因为发送信号会被转为异步的缘故，所以当去除这个timer时，则不满足预期
         # 但是不可以使用Event::defer，这里的无延迟定时器使用的就是Event::defer
 //        $this->loop->addTimer(0.0,0.0, function (){});
-        $this->loop->addTimer(0.1,0.0, function (){});
+        $this->loop->addTimer($this->tickTimeout,0.0, function (){});
 
         $this->loop->loop();
 
@@ -230,14 +230,14 @@ class OpenSwooleLoopTest extends AbstractLoopTest
         });
         $this->loop->addSignal(10, function(){});
 
-        $this->loop->addTimer(0.0,0.0, function () {
+        $this->loop->addTimer(0.1,0.0, function () {
             posix_kill(posix_getpid(), 10);
         });
 
         # 猜测是因为发送信号会被转为异步的缘故，所以当去除这个timer时，则不满足预期
         # 但是不可以使用Event::defer，这里的无延迟定时器使用的就是Event::defer
 //        $this->loop->addTimer(0.0,0.0, function (){});
-        $this->loop->addTimer(0.1,0.0, function (){});
+        $this->loop->addTimer($this->tickTimeout,0.0, function (){});
 
         $this->loop->loop();
 
