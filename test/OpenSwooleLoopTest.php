@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace WorkBunny\Test;
 
+use Swoole\Process;
 use WorkBunny\EventLoop\Drivers\OpenSwooleLoop;
 
 class OpenSwooleLoopTest extends AbstractLoopTest
@@ -164,7 +165,16 @@ class OpenSwooleLoopTest extends AbstractLoopTest
         $this->assertEquals(1, $count);
     }
 
-    /** @runInSeparateProcess 测试信号响应 */
+    /**
+     * 测试信号响应
+     * 无论如何忽略全局变量备份，始终会抛出一下错误
+     * PHPUnit\Framework\Exception: Fatal error: Uncaught Exception: Serialization of 'Closure' is not allowed in Standard input code:313
+     *
+     * @runInSeparateProcess
+     * @backupStaticAttributes disabled
+     * @backupGlobals disabled
+     *
+     */
     public function testSignalResponse()
     {
         if (
@@ -175,7 +185,6 @@ class OpenSwooleLoopTest extends AbstractLoopTest
         }
 
         $count1 = $count2 = 0;
-
         $this->loop->addSignal(12, function () use (&$count1) {
             $count1 ++;
             $this->loop->delSignal(12);
