@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace WorkBunny\Test;
 
+use Swoole\Process;
 use WorkBunny\EventLoop\Drivers\OpenSwooleLoop;
 
 /**
@@ -212,6 +213,42 @@ class OpenSwooleLoopTest extends AbstractLoopTest
         $this->assertEquals(1, $count2);
     }
 
+    /** @runInSeparateProcess 测试信号相应 */
+    public function testSignalResponseUseProcessKill()
+    {
+        if (!function_exists('posix_getpid')) {
+            $this->markTestSkipped('Signal test skipped because functions "posix_getpid" are missing.');
+        }
+
+        $count1 = $count2 = 0;
+        $this->loop->addSignal(12, function () use (&$count1) {
+            $count1 ++;
+            $this->loop->delSignal(12);
+            $this->loop->destroy();
+        });
+
+        $this->loop->addSignal(10, function () use (&$count2) {
+            $count2 ++;
+            $this->loop->delSignal(10);
+            $this->loop->destroy();
+        });
+
+        $this->loop->addTimer(0.0,0.0,function () {
+            Process::kill(posix_getpid(), 10);
+        });
+
+        # 猜测是因为发送信号会被转为异步的缘故，所以当去除这个timer时，则不满足预期
+        # 但是不可以使用Event::defer，这里的无延迟定时器使用的就是Event::defer
+//        $this->loop->addTimer(0.0,0.0, function (){});
+        $this->loop->addTimer($this->tickTimeout,0.0, function (){});
+
+        $this->loop->loop();
+
+
+        $this->assertEquals(0, $count1);
+        $this->assertEquals(1, $count2);
+    }
+
     /** @runInSeparateProcess 测试添加相同信号 */
     public function testAddSameSignalListener()
     {
@@ -237,7 +274,36 @@ class OpenSwooleLoopTest extends AbstractLoopTest
         # 猜测是因为发送信号会被转为异步的缘故，所以当去除这个timer时，则不满足预期
         # 但是不可以使用Event::defer，这里的无延迟定时器使用的就是Event::defer
 //        $this->loop->addTimer(0.0,0.0, function (){});
-        $this->loop->addTimer($this->tickTimeout,0.0, function (){});
+        $this->loop->addTimer($this->tickTimeout + 0.1,0.0, function (){});
+
+        $this->loop->loop();
+
+        $this->assertEquals(1, $funcCallCount);
+    }
+
+    /** @runInSeparateProcess 测试添加相同信号 */
+    public function testAddSameSignalListenerUseProcessKill()
+    {
+        if (!function_exists('posix_getpid')) {
+            $this->markTestSkipped('Signal test skipped because functions "posix_getpid" are missing.');
+        }
+        $funcCallCount = 0;
+
+        $this->loop->addSignal(10, function () use (&$funcCallCount) {
+            $funcCallCount ++;
+            $this->loop->delSignal(10);
+            $this->loop->destroy();
+        });
+        $this->loop->addSignal(10, function(){});
+
+        $this->loop->addTimer(0.1,0.0, function () {
+            Process::kill(posix_getpid(), 10);
+        });
+
+        # 猜测是因为发送信号会被转为异步的缘故，所以当去除这个timer时，则不满足预期
+        # 但是不可以使用Event::defer，这里的无延迟定时器使用的就是Event::defer
+//        $this->loop->addTimer(0.0,0.0, function (){});
+        $this->loop->addTimer($this->tickTimeout + 0.1,0.0, function (){});
 
         $this->loop->loop();
 
