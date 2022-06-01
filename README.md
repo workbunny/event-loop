@@ -2,23 +2,6 @@
 
 **🐇 A high-performance event loop library for PHP 🐇**
 
-## 更新
-
->    🐇 2022-05-27:
->
->    1. ext-ev 的 stream 回调入参是 EvIo 对象，这里 EvIo->fd 获取的 stream 和注册时候的 stream 不是一个流，
-> 无法用 (int)stream 做标记，详细请看 EvLoopTest::testRemoveReadStreams() 等流相关测试；
->    
->    2. ext-ev 的无延迟定时器区别于其他循环，是在IO之前触发 EvLoopTest::testNonDelayOneShotTimerFiresBeforeBIO() 等；
->    3. ext-openswoole 信号注册相关有无法通过测试的地方 OpenSwooleLoopTest::testSignalResponse() 等；
->    4. ext-openswoole 定时器慎用无延迟定时器，这里是使用 Event::defer() 结合 Timer 实现的，不能做到注册多个无延迟定时器，
-> 后注册的 defer 会覆盖前注册的；
-
->    🐇 2022-05-09:
->
->    1. 目前ext-parallel还未支持PHP8.X，所以该项目仅实现了简单的基于libevent等基于系统I/O复用事件驱动的event-loop； 
-> 等待ext-parallel的支撑。
-
 ## 简介
 
     一个event-loop实验品；
