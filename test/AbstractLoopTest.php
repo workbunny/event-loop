@@ -21,7 +21,7 @@ abstract class AbstractLoopTest extends AbstractTest
     /** @before */
     public function setUpLoop()
     {
-        // It's a timeout, don't set it too low. Travis and other CI systems are slow.
+        // 模拟loop一次的耗时
         $this->tickTimeout = 0.01;
         $this->loop = $this->createLoop();
     }

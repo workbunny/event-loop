@@ -104,6 +104,7 @@ class OpenSwooleLoop extends AbstractLoop
             }else{
                 $timerId = Timer::after($delay, $callback);
             }
+            $this->_storage->del($id);
         }else{
             if($equals){
                 $timerId = Timer::tick($repeat, $callback);
