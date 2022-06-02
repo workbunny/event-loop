@@ -4,26 +4,54 @@ declare(strict_types=1);
 namespace WorkBunny\Test;
 
 use PHPUnit\Framework\TestCase;
+use WorkBunny\EventLoop\Drivers\AbstractLoop;
 use WorkBunny\EventLoop\Drivers\LoopInterface;
 
 abstract class AbstractTest extends TestCase
 {
-    /**
-     * @var LoopInterface|null
-     */
-    protected ?LoopInterface $loop = null;
+    /** @var int  */
+    const PHP_DEFAULT_CHUNK_SIZE = 8192;
+
+    /** @var float 模拟loop一圈的时长，20ms */
+    public float $tickTimeout = 0.02;
+
+    /** @var ?string */
+    protected ?string $received = null;
+
+    /** @var AbstractLoop|null  */
+    protected ?AbstractLoop $loop = null;
 
     /** 创建循环 */
     abstract public function createLoop();
 
     /** 获取循环 */
-    protected function getLoop(): ? LoopInterface
+    public function getLoop(): ? AbstractLoop
     {
         return $this->loop;
     }
 
+    /** @before */
+    public function setUpLoop()
+    {
+        $this->loop = $this->createLoop();
+    }
+
+    /** 创建socket */
+    public function createSocketPair()
+    {
+        $domain = (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX;
+        $sockets = stream_socket_pair($domain, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+
+        foreach ($sockets as $socket) {
+            if (function_exists('stream_set_read_buffer')) {
+                stream_set_read_buffer($socket, 0);
+            }
+        }
+        return $sockets;
+    }
+
     /** 单次loop */
-    protected function tickLoop(float $delay = 0.0)
+    public function tickLoop(float $delay = 0.0)
     {
         $this->getLoop()->addTimer($delay, 0.0, function () {
             $this->getLoop()->destroy();
@@ -33,7 +61,7 @@ abstract class AbstractTest extends TestCase
     }
 
     /** 比较时间 */
-    protected function assertRunSlowerThan(LoopInterface $loop, float $minInterval)
+    public function assertRunFasterThan(float $maxInterval)
     {
         $start = microtime(true);
 
@@ -42,19 +70,6 @@ abstract class AbstractTest extends TestCase
         $end = microtime(true);
         $interval = $end - $start;
 
-        $this->assertLessThan($interval, $minInterval);
-    }
-
-    /** 比较时间 */
-    protected function assertRunFasterThan(float $maxInterval)
-    {
-        $start = microtime(true);
-
-        $this->getLoop()->loop();
-
-        $end = microtime(true);
-        $interval = $end - $start;
-
-        $this->assertLessThan($maxInterval, $interval);
+        $this->assertGreaterThan($interval, $maxInterval);
     }
 }
