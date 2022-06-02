@@ -42,7 +42,9 @@ final class Storage
     public function del(string $key): void
     {
         unset($this->_storage[$key]);
-        $this->_count --;
+        if ($this > 0){
+            $this->_count --;
+        }
     }
 
     /**

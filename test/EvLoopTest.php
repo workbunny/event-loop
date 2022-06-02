@@ -4,8 +4,10 @@ declare(strict_types=1);
 namespace WorkBunny\Test;
 
 use EvIo;
+use http\Encoding\Stream;
 use WorkBunny\EventLoop\Drivers\AbstractLoop;
 use WorkBunny\EventLoop\Drivers\EvLoop;
+use WorkBunny\Test\Events\StreamsTest;
 
 class EvLoopTest extends AbstractLoopTest
 {
@@ -19,25 +21,109 @@ class EvLoopTest extends AbstractLoopTest
         return new EvLoop();
     }
 
-    /** 读流处理器可以引用接受数据 */
-    public function testReadStreamHandlerReceivesDataFromStreamReferenceBIO()
+    /**
+     * @see AbstractLoopTest::testReadStreamBeforeTimer()
+     * @dataProvider provider
+     * @param bool $bio
+     * @return void
+     */
+    public function testReadStreamBeforeTimer(bool $bio)
+    {
+        $this->markTestSkipped('The priority of the EvLoop does not apply to this test.');
+    }
+
+    /**
+     * @see AbstractLoopTest::testWriteStreamBeforeTimer()
+     * @dataProvider provider
+     * @param bool $bio
+     * @return void
+     */
+    public function testWriteStreamBeforeTimer(bool $bio)
+    {
+        $this->markTestSkipped('The priority of the EvLoop does not apply to this test.');
+    }
+
+    /**
+     * @see AbstractLoopTest::testReadStreamBeforeTimer() 与之相反
+     * @dataProvider provider
+     * @param bool $bio
+     * @return void
+     */
+    public function testReadStreamAfterTimer(bool $bio)
     {
         list ($input, $output) = $this->createSocketPair();
-        stream_set_blocking($input, true);
-        stream_set_blocking($output, true);
+        stream_set_blocking($input, $bio);
+        stream_set_blocking($output, $bio);
+
+        fwrite($output, 'foo' . PHP_EOL);
+
+        $string = '';
+
+        $this->getLoop()->addTimer(0.0,0.0, function () use (&$string){
+            $string .= 'timer' . PHP_EOL;
+        });
+
+        $this->getLoop()->addReadStream($input, function() use(&$string){
+            $string .= 'read' . PHP_EOL;
+        });
+
+        $this->tickLoop();
+
+        $this->assertEquals('timer' . PHP_EOL . 'read' . PHP_EOL, $string);
+    }
+
+    /**
+     * @see AbstractLoopTest::testWriteStreamBeforeTimer() 与之相反
+     * @dataProvider provider
+     * @param bool $bio
+     * @return void
+     */
+    public function testWriteStreamAfterTimer(bool $bio)
+    {
+
+        list ($input, $output) = $this->createSocketPair();
+        stream_set_blocking($output, $bio);
+        fwrite($output, 'foo' . PHP_EOL);
+
+        $string = '';
+
+        $this->getLoop()->addTimer(0.0,0.0, function () use (&$string){
+            $string .= 'timer' . PHP_EOL;
+        });
+
+        $this->getLoop()->addWriteStream($output, function() use(&$string){
+            $string .= 'write' . PHP_EOL;
+        });
+
+        $this->tickLoop();
+
+        $this->assertEquals('timer' . PHP_EOL . 'write' . PHP_EOL, $string);
+    }
+
+    /** 
+     * @see StreamsTest::testReadStreamHandlerReceivesDataFromStreamReference()
+     * @dataProvider provider
+     * @param bool $bio
+     * @return void
+     */
+    public function testReadStreamHandlerReceivesDataFromStreamReference(bool $bio)
+    {
+        list ($input, $output) = $this->createSocketPair();
+        stream_set_blocking($input, $bio);
+        stream_set_blocking($output, $bio);
 
         $this->received = '';
         fwrite($input, 'hello');
         fclose($input);
 
-        $this->loop->addReadStream($output, function (EvIo $io) {
+        $this->getLoop()->addReadStream($output, function (EvIo $io) {
             $output = $io->fd;
             $chunk = fread($output, 1024);
             if ($chunk === '') {
                 $this->received .= 'X';
-                $this->loop->delReadStream($io);
+                $this->getLoop()->delReadStream($io);
                 fclose($output);
-                $this->loop->destroy();
+                $this->getLoop()->destroy();
             } else {
                 $this->received .= '[' . $chunk . ']';
             }
@@ -49,102 +135,30 @@ class EvLoopTest extends AbstractLoopTest
 
         $this->assertEquals('[hello]X', $this->received);
     }
-
-    /** 读流处理器可以引用接受数据 */
-    public function testReadStreamHandlerReceivesDataFromStreamReferenceNIO()
+    
+    /**
+     * @see StreamsTest::testRemoveReadStreams()
+     * @dataProvider provider
+     * @param bool $bio
+     * @return void
+     */
+    public function testRemoveReadStreams(bool $bio)
     {
-        list ($input, $output) = $this->createSocketPair();
-        stream_set_blocking($input, false);
-        stream_set_blocking($output, false);
-
-        $this->received = '';
-        fwrite($input, 'hello');
-        fclose($input);
-
-        $this->loop->addReadStream($output, function (EvIo $io) {
-            $output = $io->fd;
-            $chunk = fread($output, 1024);
-            if ($chunk === '') {
-                $this->received .= 'X';
-                $this->loop->delReadStream($io);
-                fclose($output);
-                $this->loop->destroy();
-            } else {
-                $this->received .= '[' . $chunk . ']';
-            }
-
-        });
-        $this->assertEquals('', $this->received);
-
-        $this->assertRunFasterThan($this->tickTimeout * 2);
-
-        $this->assertEquals('[hello]X', $this->received);
-    }
-
-    /** 无延迟单次定时器在BIO之前触发 */
-    public function testNonDelayOneShotTimerFiresBeforeBIO()
-    {
-        list ($stream) = $this->createSocketPair();
-        stream_set_blocking($stream, true);
-
-        $this->loop->addWriteStream(
-            $stream,
-            function () {
-                echo 'stream' . PHP_EOL;
-            }
-        );
-        $this->loop->addTimer(0.0,0.0,
-            function () {
-                echo 'non-delay one-shot timer' . PHP_EOL;
-            }
-        );
-        $this->expectOutputString( 'non-delay one-shot timer' . PHP_EOL . 'stream' . PHP_EOL);
-        $this->tickLoop();
-    }
-
-    /** 无延迟单次定时器在NIO之前触发 */
-    public function testNonDelayOneShotTimerFiresBeforeNIO()
-    {
-        list ($stream) = $this->createSocketPair();
-        stream_set_blocking($stream, false);
-
-        $this->loop->addWriteStream(
-            $stream,
-            function () {
-                echo 'stream' . PHP_EOL;
-            }
-        );
-        $this->loop->addTimer(0.0,0.0,
-            function () {
-                echo 'non-delay one-shot timer' . PHP_EOL;
-            }
-        );
-        $this->expectOutputString('non-delay one-shot timer' . PHP_EOL . 'stream' . PHP_EOL);
-
-        $this->tickLoop();
-    }
-
-    /** 移除读流 */
-    public function testRemoveReadStreamsBIO()
-    {
-        if(!$this->loop instanceof AbstractLoop){
-            $this->markTestSkipped('Remove read streams test skipped because because loop not instance of AbstractLoop.');
-        }
         list ($input1, $output1) = $this->createSocketPair();
         list ($input2, $output2) = $this->createSocketPair();
 
-        stream_set_blocking($input1, true);
-        stream_set_blocking($input2, true);
-        stream_set_blocking($output1, true);
-        stream_set_blocking($output2, true);
+        stream_set_blocking($input1, $bio);
+        stream_set_blocking($input2, $bio);
+        stream_set_blocking($output1, $bio);
+        stream_set_blocking($output2, $bio);
 
 
-        $this->loop->addReadStream($input1, function (EvIo $io) {
-            $this->loop->delReadStream($io);
+        $this->getLoop()->addReadStream($input1, function (EvIo $io) {
+            $this->getLoop()->delReadStream($io);
         });
 
-        $this->loop->addReadStream($input2, function (EvIo $io) {
-            $this->loop->delReadStream($io);
+        $this->getLoop()->addReadStream($input2, function (EvIo $io) {
+            $this->getLoop()->delReadStream($io);
         });
 
         fwrite($output1, "foo1\n");
@@ -152,90 +166,35 @@ class EvLoopTest extends AbstractLoopTest
 
         $this->tickLoop($this->tickTimeout);
 
-        $this->assertCount(0, $this->loop->getReadFds());
-        $this->assertCount(0, $this->loop->getReads());
+        $this->assertCount(0, $this->getLoop()->getReadFds());
+        $this->assertCount(0, $this->getLoop()->getReads());
     }
 
-    /** 移除读流 */
-    public function testRemoveReadStreamsNIO()
+    /**
+     * @see StreamsTest::testRemoveWriteStreams()
+     * @dataProvider provider
+     * @param bool $bio
+     * @return void
+     */
+    public function testRemoveWriteStreams(bool $bio)
     {
-        if(!$this->loop instanceof AbstractLoop){
-            $this->markTestSkipped('Remove read streams test skipped because because loop not instance of AbstractLoop.');
-        }
-        list ($input1, $output1) = $this->createSocketPair();
-        list ($input2, $output2) = $this->createSocketPair();
-
-        stream_set_blocking($input1, false);
-        stream_set_blocking($input2, false);
-        stream_set_blocking($output1, false);
-        stream_set_blocking($output2, false);
-
-        $this->loop->addReadStream($input1, function (EvIo $io) {
-            $this->loop->delReadStream($io);
-        });
-
-        $this->loop->addReadStream($input2, function (EvIo $io) {
-            $this->loop->delReadStream($io);
-        });
-
-        fwrite($output1, "foo1\n");
-        fwrite($output2, "foo2\n");
-
-        $this->tickLoop($this->tickTimeout);
-
-        $this->assertCount(0, $this->loop->getReadFds());
-        $this->assertCount(0, $this->loop->getReads());
-    }
-
-    /** 移除写流 */
-    public function testRemoveWriteStreamsBIO()
-    {
-        if(!$this->loop instanceof AbstractLoop){
-            $this->markTestSkipped('Remove write streams test skipped because because loop not instance of AbstractLoop.');
-        }
         list ($input1) = $this->createSocketPair();
         list ($input2) = $this->createSocketPair();
 
-        stream_set_blocking($input1, true);
-        stream_set_blocking($input2, true);
+        stream_set_blocking($input1, $bio);
+        stream_set_blocking($input2, $bio);
 
-        $this->loop->addWriteStream($input1, function (EvIo $io) {
-            $this->loop->delWriteStream($io);
+        $this->getLoop()->addWriteStream($input1, function (EvIo $io) {
+            $this->getLoop()->delWriteStream($io);
         });
 
-        $this->loop->addWriteStream($input2, function (EvIo $io) {
-            $this->loop->delWriteStream($io);
-        });
-
-        $this->tickLoop($this->tickTimeout);
-
-        $this->assertCount(0, $this->loop->getWriteFds());
-        $this->assertCount(0, $this->loop->getWrites());
-    }
-
-    /** 移除写流 */
-    public function testRemoveWriteStreamsNIO()
-    {
-        if(!$this->loop instanceof AbstractLoop){
-            $this->markTestSkipped('Remove write streams test skipped because because loop not instance of AbstractLoop.');
-        }
-        list ($input1) = $this->createSocketPair();
-        list ($input2) = $this->createSocketPair();
-
-        stream_set_blocking($input1, false);
-        stream_set_blocking($input2, false);
-
-        $this->loop->addWriteStream($input1, function (EvIo $io) {
-            $this->loop->delWriteStream($io);
-        });
-
-        $this->loop->addWriteStream($input2, function (EvIo $io) {
-            $this->loop->delWriteStream($io);
+        $this->getLoop()->addWriteStream($input2, function (EvIo $io) {
+            $this->getLoop()->delWriteStream($io);
         });
 
         $this->tickLoop($this->tickTimeout);
 
-        $this->assertCount(0, $this->loop->getWriteFds());
-        $this->assertCount(0, $this->loop->getWrites());
+        $this->assertCount(0, $this->getLoop()->getWriteFds());
+        $this->assertCount(0, $this->getLoop()->getWrites());
     }
 }

@@ -82,4 +82,16 @@ abstract class AbstractLoop implements LoopInterface
     {
         return $this->_storage;
     }
+
+    /**
+     * @return void
+     */
+    public function clear()
+    {
+        $this->_storage = new Storage();
+        $this->_writeFds = [];
+        $this->_readFds = [];
+        $this->_writes = [];
+        $this->_reads = [];
+    }
 }

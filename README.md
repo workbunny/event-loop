@@ -154,3 +154,24 @@ var_dump('123');
 ```
 
 ## 说明
+### 1. 测试用例中各个loop比较特殊的地方会在对应测试用例中说明
+- EvLoop 的Stream总是后于Timer **详见EvLoopTest.php**
+- EventLoop 的延迟定时器区别于其他Loop的定时器，需要多一个loop周期 **详见EventLoopTest.php**
+- OpenSwoole 的读/写流不能通过 **testReadStreamHandlerTriggeredMultiTimes** 测试 **详见OpenSwooleLoopTest.php**
+
+### 2. 相同定时器/触发器的优先级遵循先注册先触发
+
+### 3. OpenSwoole在同一周期内是有优先级的
+
+> 1. 通过 Process::signal 设置的信号处理回调函数
+> 
+> 2. 通过 Timer::tick 和 Timer::after 设置的定时器回调函数
+> 
+> 3. 通过 Event::defer 设置的延迟执行函数
+> 
+> 4. 通过 Event::cycle 设置的周期回调函数
+
+
+### 4. OpenSwoole的无延迟触发器/无延迟定时器利用了 Event::defer，需要注意优先级
+
+### 5. OpenSwoole的 Event::defer 可以重复注册多个回调

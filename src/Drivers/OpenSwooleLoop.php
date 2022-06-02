@@ -73,7 +73,6 @@ class OpenSwooleLoop extends AbstractLoop
     {
         if(!isset($this->_signals[$signal])){
             $this->_signals[$signal] = $handler;
-//            \pcntl_signal($signal, $handler);
             Process::signal($signal, $handler);
         }
     }
@@ -83,7 +82,6 @@ class OpenSwooleLoop extends AbstractLoop
     {
         if(isset($this->_signals[$signal])){
             unset($this->_signals[$signal]);
-//            \pcntl_signal($signal, \SIG_IGN);
             Process::signal($signal, function (){});# 模拟 SIG_IGN
         }
     }
@@ -92,45 +90,47 @@ class OpenSwooleLoop extends AbstractLoop
     public function addTimer(float $delay, float $repeat, \Closure $callback): string
     {
         $timer = new TimerObj($delay, $repeat, $callback);
-        $id = spl_object_hash($timer);
+        $timerId = spl_object_hash($timer);
         $delay = $this->_floatToInt($delay);
         $repeat = $this->_floatToInt($repeat);
         $equals = ($delay === $repeat);
+        $id = 0;
 
         if($repeat === 0){
             if($equals){
-                Event::defer($callback);
-                $timerId = 0;
+                Event::defer(function () use($timerId, $callback){
+                    $callback();
+                    $this->_storage->del($timerId);
+                });
             }else{
-                $timerId = Timer::after($delay, $callback);
+                $id = Timer::after($delay, function () use($timerId, $callback){
+                    $callback();
+                    $this->_storage->del($timerId);
+                });
             }
-            $this->_storage->del($id);
         }else{
             if($equals){
-                $timerId = Timer::tick($repeat, $callback);
+                $id = Timer::tick($repeat, $callback);
             }else{
-                $timerId = 0;
-                Event::defer(function() use($id, &$timerId, $repeat, $callback){
-                    if($timerId = Timer::tick($repeat, $callback)){
-                        $this->_storage->set($id, $timerId);
+                Event::defer(function() use($timerId, &$id, $repeat, $callback){
+                    if($id = Timer::tick($repeat, $callback)){
+                        $this->_storage->set($timerId, $id);
                     }
                     $callback();
                 });
             }
         }
-        return $this->_storage->add($id, (int)$timerId);
+        return $this->_storage->add($timerId, (int)$id);
     }
 
     /** @inheritDoc */
     public function delTimer(string $timerId): void
     {
         $id = $this->_storage->get($timerId);
-        if($id !== null){
-            if($id){
-                Timer::clear($id);
-            }
-            $this->_storage->del($timerId);
+        if($id !== 0){
+            Timer::clear($id);
         }
+        $this->_storage->del($timerId);
     }
 
     /** @inheritDoc */
@@ -148,8 +148,11 @@ class OpenSwooleLoop extends AbstractLoop
     /** 获取小数点位数 */
     protected function _floatToInt(float $float): int
     {
-        $number = ($chr = strrchr((string)$float, '.')) ? strlen(substr($chr, 1)) : 0;
-        return (int)($float * pow(10, $number));
+        $float = $float * 1000;
+        if($float < 0.0){
+            throw new \InvalidArgumentException('Minimum support 0.001');
+        }
+        return (int)($float);
     }
 }
 
