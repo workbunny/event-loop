@@ -1,6 +1,11 @@
-# workbunny/event-loop
 
-**🐇 A high-performance event loop library for PHP 🐇**
+---
+
+<img style="display: block;margin: 0 auto;" width="260px" src="https://chaz6chez.cn/images/workbunny-logo.png" alt="workbunny">
+
+## <center>workbunny/event-loop</center>
+
+**<center>🐇 A high-performance event loop library for PHP 🐇</center>**
 
 ## 简介
 
@@ -175,3 +180,5 @@ var_dump('123');
 ### 4. OpenSwoole的无延迟触发器/无延迟定时器利用了 Event::defer，需要注意优先级
 
 ### 5. OpenSwoole的 Event::defer 可以重复注册多个回调
+
+---
