@@ -1,11 +1,9 @@
 
----
+<p align="center"><img width="260px" src="https://chaz6chez.cn/images/workbunny-logo.png" alt="workbunny"></p>
 
-<img style="display: block;margin: 0 auto;" width="260px" src="https://chaz6chez.cn/images/workbunny-logo.png" alt="workbunny">
+**<p align="center">workbunny/event-loop</p>**
 
-## <center>workbunny/event-loop</center>
-
-**<center>🐇 A high-performance event loop library for PHP 🐇</center>**
+**<p align="center">🐇 A high-performance event loop library for PHP 🐇</p>**
 
 ## 简介
 
