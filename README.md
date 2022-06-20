@@ -5,6 +5,8 @@
 
 **<p align="center">🐇 A high-performance event loop library for PHP 🐇</p>**
 
+[![Latest Stable Version](http://poser.pugx.org/workbunny/event-loop/v)](https://packagist.org/packages/workbunny/event-loop) [![Total Downloads](http://poser.pugx.org/workbunny/event-loop/downloads)](https://packagist.org/packages/workbunny/event-loop) [![Latest Unstable Version](http://poser.pugx.org/workbunny/event-loop/v/unstable)](https://packagist.org/packages/workbunny/event-loop) [![License](http://poser.pugx.org/workbunny/event-loop/license)](https://packagist.org/packages/workbunny/event-loop) [![PHP Version Require](http://poser.pugx.org/workbunny/event-loop/require/php)](https://packagist.org/packages/workbunny/event-loop)
+
 ## 简介
 
     一个event-loop实验品；
