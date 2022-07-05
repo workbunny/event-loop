@@ -9,7 +9,7 @@ on:
 jobs:
   PHPUnit:
     name: PHPUnit (PHP ${{ matrix.php }})
-    runs-on: alpine-3.13
+    runs-on: ubuntu-lastest
     strategy:
       matrix:
         php:
@@ -22,21 +22,22 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           
-      - run: apk update && apk add libevent-dev libev-dev
+      - run: sudo apt-get update && sudo apt-get install libevent-dev libev-dev
       - name: Install ext-event on PHP >= 7.4
         run: |
-          echo "yes" | pecl install event
+          echo "yes" | sudo pecl install event
           php -r 'exit((int)(PHP_VERSION_ID >= 70400));' || echo "extension=event.so" | tee -a "$(php -r 'echo php_ini_loaded_file();')"
         if: ${{ matrix.php >= 7.4 }}
       - name: Install ext-ev on PHP >= 7.4
         run: |
-          echo "yes" | pecl install ev
+          echo "yes" | sudo pecl install ev
           php -r 'exit((int)(PHP_VERSION_ID >= 70400));' || echo "extension=ev.so" | tee -a "$(php -r 'echo php_ini_loaded_file();')"
         if: ${{ matrix.php >= 7.4 }}
       - name: Install ext-openswoole on PHP >= 7.4
         run: |
-          echo "yes" | pecl install openswoole
+          echo "yes" | sudo pecl install openswoole
           php -r 'exit((int)(PHP_VERSION_ID >= 70400));' || echo "extension=openswoole.so" | tee -a "$(php -r 'echo php_ini_loaded_file();')"
         if: ${{ matrix.php >= 7.4 }}
       - run: composer install
       - run: vendor/bin/phpunit --coverage-text
+      
