@@ -18,10 +18,10 @@ jobs:
           - 7.4
     steps:
       - uses: actions/checkout@v3
-      - uses: shivammathur/setup-php@v2
+      - uses: amateurish/setup-php@v3
         with:
           php-version: ${{ matrix.php }}
-          
+
       - run: sudo apt-get update && sudo apt-get install libevent-dev libev-dev
       - name: Install ext-event on PHP >= 7.4
         run: |
@@ -39,5 +39,5 @@ jobs:
           php -r 'exit((int)(PHP_VERSION_ID >= 70400));' || echo "extension=openswoole.so" | tee -a "$(php -r 'echo php_ini_loaded_file();')"
         if: ${{ matrix.php >= 7.4 && matrix.php < 8.0}}
       - run: composer install
-      - run: vendor/bin/phpunit --coverage-text
+      - run: vendor/bin/phpunit
       
