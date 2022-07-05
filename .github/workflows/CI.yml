@@ -17,24 +17,15 @@ jobs:
           - 8.0
           - 7.4
     steps:
+      - run: sudo apt-get update && sudo apt-get install libevent-dev libev-dev
+
       - uses: actions/checkout@v3
+
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          extensions: event, ev, openswoole
 
-      - run: sudo apt-get update && sudo apt-get install libevent-dev libev-dev
-      - name: Install ext-event on PHP >= 7.4
-        run: |
-          echo "yes" | sudo pecl install event
-        if: ${{ matrix.php >= 7.4 }}
-      - name: Install ext-ev on PHP >= 7.4
-        run: |
-          echo "yes" | sudo pecl install ev
-        if: ${{ matrix.php >= 7.4 }}
-      - name: Install ext-openswoole on PHP on 7.4
-        run: |
-          echo "yes" | sudo pecl install openswoole
-        if: ${{ matrix.php >= 7.4 && matrix.php < 8.0}}
       - run: composer install
       - run: vendor/bin/phpunit
       
