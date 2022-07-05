@@ -26,17 +26,14 @@ jobs:
       - name: Install ext-event on PHP >= 7.4
         run: |
           echo "yes" | sudo pecl install event
-          php -r 'exit((int)(PHP_VERSION_ID >= 70400));' || echo "extension=event.so" | tee -a "$(php -r 'echo php_ini_loaded_file();')"
         if: ${{ matrix.php >= 7.4 }}
       - name: Install ext-ev on PHP >= 7.4
         run: |
           echo "yes" | sudo pecl install ev
-          php -r 'exit((int)(PHP_VERSION_ID >= 70400));' || echo "extension=ev.so" | tee -a "$(php -r 'echo php_ini_loaded_file();')"
         if: ${{ matrix.php >= 7.4 }}
       - name: Install ext-openswoole on PHP on 7.4
         run: |
           echo "yes" | sudo pecl install openswoole
-          php -r 'exit((int)(PHP_VERSION_ID >= 70400));' || echo "extension=openswoole.so" | tee -a "$(php -r 'echo php_ini_loaded_file();')"
         if: ${{ matrix.php >= 7.4 && matrix.php < 8.0}}
       - run: composer install
       - run: vendor/bin/phpunit
