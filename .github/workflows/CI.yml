@@ -18,7 +18,7 @@ jobs:
           - 7.4
     steps:
       - uses: actions/checkout@v3
-      - uses: amateurish/setup-php@v3
+      - uses: amateurish/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
 
