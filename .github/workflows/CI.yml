@@ -21,7 +21,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: event, ev, openswoole
+          extensions: event, ev
       - run: composer install
       - run: vendor/bin/phpunit --coverage-text
       
