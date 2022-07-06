@@ -17,15 +17,11 @@ jobs:
           - 8.0
           - 7.4
     steps:
-      - run: sudo apt-get update && sudo apt-get install libevent-dev libev-dev
-
       - uses: actions/checkout@v3
-
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: event, ev, openswoole
-
       - run: composer install
       - run: vendor/bin/phpunit --coverage-text
       
