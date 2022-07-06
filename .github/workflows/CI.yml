@@ -21,19 +21,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
       - run: sudo apt-get update && sudo apt-get install libevent-dev libev-dev
-      
-      - name: Install ext-event on PHP >= 5.4
-        run: |
-          echo "yes" | sudo pecl install event
-          # explicitly enable extensions in php.ini on PHP 5.6+
-          php -r 'exit((int)(PHP_VERSION_ID >= 50600));' || echo "extension=event.so" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
-        if: ${{ matrix.php >= 5.4 }}
-      - name: Install ext-ev on PHP >= 5.4
-        run: |
-          echo "yes" | sudo pecl install ev
-          # explicitly enable extensions in php.ini on PHP 5.6+
-          php -r 'exit((int)(PHP_VERSION_ID >= 50600));' || echo "extension=ev.so" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
-        if: ${{ matrix.php >= 5.4 }}
-        
+      - run: sudo pecl install event ev
+      - run: php -m
       - run: composer install
       - run: vendor/bin/phpunit --no-coverage
