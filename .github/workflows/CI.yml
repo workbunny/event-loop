@@ -22,5 +22,6 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: event, ev, openswoole
           tools: phpunit:9.5, composer:v2
+          coverage: none
       - run: composer install
       - run: vendor/bin/phpunit test
