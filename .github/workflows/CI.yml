@@ -23,4 +23,4 @@ jobs:
           extensions: event, ev, openswoole
           tools: phpunit:9.5, composer:v2
       - run: composer install
-      - run: vendor/bin/phpunit --no-coverage
+      - run: vendor/bin/phpunit test
