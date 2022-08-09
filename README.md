@@ -5,7 +5,22 @@
 
 **<p align="center">🐇 A high-performance event loop library for PHP 🐇</p>**
 
-[![Latest Stable Version](http://poser.pugx.org/workbunny/event-loop/v)](https://packagist.org/packages/workbunny/event-loop) [![Total Downloads](http://poser.pugx.org/workbunny/event-loop/downloads)](https://packagist.org/packages/workbunny/event-loop) [![Latest Unstable Version](http://poser.pugx.org/workbunny/event-loop/v/unstable)](https://packagist.org/packages/workbunny/event-loop) [![License](http://poser.pugx.org/workbunny/event-loop/license)](https://packagist.org/packages/workbunny/event-loop) [![PHP Version Require](http://poser.pugx.org/workbunny/event-loop/require/php)](https://packagist.org/packages/workbunny/event-loop)
+<div align="center">
+    <a href="https://github.com/workbunny/event-loop/actions">
+        <img src="https://github.com/workbunny/event-loop/actions/workflows/CI.yml/badge.svg" alt="Build Status">
+    </a>
+    <a href="https://github.com/workbunny/event-loop/releases">
+        <img alt="Latest Stable Version" src="http://poser.pugx.org/workbunny/event-loop/v">
+    </a>
+    <a href="https://github.com/workbunny/event-loop/blob/main/composer.json">
+        <img alt="PHP Version Require" src="http://poser.pugx.org/workbunny/event-loop/require/php">
+    </a>
+    <a href="https://github.com/workbunny/event-loop/blob/main/LICENSE">
+        <img alt="GitHub license" src="http://poser.pugx.org/workbunny/event-loop/license">
+    </a>
+    
+</div>
+
 
 ## 简介
 
