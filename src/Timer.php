@@ -4,8 +4,8 @@
  *
  * Redistributions of files must retain the above copyright notice.
  *
- * @author    chaz6chez<250220719@qq.com>
- * @copyright chaz6chez<250220719@qq.com>
+ * @author    chaz6chez<chaz6chez1993@outlook.com>
+ * @copyright chaz6chez<chaz6chez1993@outlook.com>
  * @link      https://github.com/workbunny/event-loop
  * @license   https://github.com/workbunny/event-loop/blob/main/LICENSE
  */
@@ -20,18 +20,18 @@ final class Timer
     /** @var float 延迟 */
     private float $delay;
 
-    /** @var float 重复 */
-    private float $repeat;
+    /** @var float|false 重复 */
+    private float|false $repeat;
 
     /** @var Closure 处理函数 */
     private Closure $handler;
 
     /**
      * @param float $delay
-     * @param float $repeat
+     * @param float|false $repeat
      * @param Closure $handler
      */
-    public function __construct(float $delay, float $repeat, Closure $handler)
+    public function __construct(float $delay, float|false $repeat, Closure $handler)
     {
         $this->delay = $delay;
         $this->repeat = $repeat;
@@ -47,9 +47,9 @@ final class Timer
     }
 
     /**
-     * @return float
+     * @return float|false
      */
-    public function getRepeat(): float
+    public function getRepeat(): float|false
     {
         return $this->repeat;
     }

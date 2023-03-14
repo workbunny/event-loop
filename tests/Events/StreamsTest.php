@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WorkBunny\Test\Events;
+namespace WorkBunny\Tests\Events;
 
 trait StreamsTest
 {

@@ -12,16 +12,17 @@ jobs:
     strategy:
       matrix:
         php:
+          - 8.2
           - 8.1
           - 8.0
-          - 7.4
     steps:
       - uses: actions/checkout@v3
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: event, ev, openswoole
+          extensions: event, ev
           tools: phpunit:9.5, composer:v2
           coverage: none
       - run: composer install
+      - run: composer require swow/swow
       - run: vendor/bin/phpunit test

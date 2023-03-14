@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace WorkBunny\Test;
+namespace WorkBunny\Tests;
 
-use WorkBunny\Test\Events\SignalsTest;
-use WorkBunny\Test\Events\StreamsTest;
-use WorkBunny\Test\Events\TimerTest;
+use WorkBunny\Tests\Events\SignalsTest;
+use WorkBunny\Tests\Events\StreamsTest;
+use WorkBunny\Tests\Events\TimerTest;
 
 abstract class AbstractLoopTest extends AbstractTest
 {

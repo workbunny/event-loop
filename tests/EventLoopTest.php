@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace WorkBunny\Test;
+namespace WorkBunny\Tests;
 
 use WorkBunny\EventLoop\Drivers\EventLoop;
-use WorkBunny\Test\Events\TimerTest;
+use WorkBunny\Tests\Events\TimerTest;
 
 class EventLoopTest extends AbstractLoopTest
 {

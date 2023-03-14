@@ -14,28 +14,27 @@
   "authors": [
     {
       "name": "chaz6chez",
-      "email": "250220719@qq.com",
+      "email": "chaz6chez1993@outlook.com",
       "homepage": "https://chaz6chez.cn",
       "role": "Developer"
     }
   ],
   "support": {
-    "email": "250220719@qq.com",
+    "email": "chaz6chez1993@outlook.com",
     "issues": "https://github.com/workbunny/event-loop/issues",
     "source": "https://github.com/workbunny/event-loop"
   },
   "require": {
-    "php": ">=7.4"
+    "php": ">=8.0"
   },
   "require-dev": {
-    "paulxu-cn/event-ide-helper": "dev-master",
-    "openswoole/ide-helper": "dev-master",
     "symfony/var-dumper": "^5.0",
     "phpunit/phpunit": "^9.0"
   },
   "suggest": {
     "ext-event": "For EventLoop. ",
     "ext-ev": "For EvLoop. ",
+    "swow/swow": "For SwowLoop. ",
     "ext-pcntl" : "Let NativeLoop support signal handling. "
   },
   "autoload": {
@@ -45,7 +44,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "WorkBunny\\Test\\": "test"
+      "WorkBunny\\Tests\\": "tests"
     }
   }
 }

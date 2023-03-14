@@ -4,8 +4,8 @@
  *
  * Redistributions of files must retain the above copyright notice.
  *
- * @author    chaz6chez<250220719@qq.com>
- * @copyright chaz6chez<250220719@qq.com>
+ * @author    chaz6chez<chaz6chez1993@outlook.com>
+ * @copyright chaz6chez<chaz6chez1993@outlook.com>
  * @link      https://github.com/workbunny/event-loop
  * @license   https://github.com/workbunny/event-loop/blob/main/LICENSE
  */
@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace WorkBunny\EventLoop\Drivers;
 
-use WorkBunny\EventLoop\Exception\LoopException;
 use WorkBunny\EventLoop\Timer;
 use SplPriorityQueue;
 use Closure;
@@ -29,15 +28,24 @@ class NativeLoop extends AbstractLoop
     /** @inheritDoc */
     public function __construct()
     {
-        if(!extension_loaded('pcntl')){
-            throw new LoopException('not support: ext-pcntl');
-        }
         parent::__construct();
 
         $this->_queue = new SplPriorityQueue();
         $this->_queue->setExtractFlags(SplPriorityQueue::EXTR_BOTH);
         $this->_readFds = [];
         $this->_writeFds = [];
+    }
+
+    /** @inheritDoc */
+    public function getExtName(): string
+    {
+        return 'pcntl';
+    }
+
+    /** @inheritDoc */
+    public function hasExt(): bool
+    {
+        return extension_loaded($this->getExtName());
     }
 
     /** @inheritDoc */
@@ -101,7 +109,7 @@ class NativeLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function addTimer(float $delay, float $repeat, Closure $callback): string
+    public function addTimer(float $delay, float|false $repeat, Closure $callback): string
     {
         $timer = new Timer($delay, $repeat, $callback);
         $runTime = \hrtime(true) * 1e-9 + $delay;
@@ -138,7 +146,7 @@ class NativeLoop extends AbstractLoop
 
             if($writes or $reads or $excepts){
                 try {
-                    @stream_select($reads, $writes, $excepts, 0,0);
+                    @\stream_select($reads, $writes, $excepts, 0,0);
                 } catch (\Throwable $e) {}
 
                 foreach ($reads as $stream) {
@@ -156,9 +164,11 @@ class NativeLoop extends AbstractLoop
                 }
             }
 
+            \pcntl_signal_dispatch();
+
             $this->_tick();
 
-            usleep(0);
+            \usleep(0);
         }
     }
 
@@ -184,7 +194,7 @@ class NativeLoop extends AbstractLoop
                 if (($runTime - $timeNow) <= 0) {
                     $this->_queue->extract();
                     \call_user_func($callback);
-                    if($repeat !== 0.0){
+                    if($repeat !== false){
                         $nextTime = $timeNow + $repeat;
                         $this->_queue->insert($timerId, -$nextTime);
                     }else{

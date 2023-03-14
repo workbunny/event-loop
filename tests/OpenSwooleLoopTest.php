@@ -1,14 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace WorkBunny\Test;
+namespace WorkBunny\Tests;
 
 use Swoole\Process;
 use WorkBunny\EventLoop\Drivers\OpenSwooleLoop;
-use WorkBunny\Test\Events\StreamsTest;
-use WorkBunny\Test\Events\TimerTest;
+use WorkBunny\Tests\Events\StreamsTest;
+use WorkBunny\Tests\Events\TimerTest;
 
 /**
+ * @deprecated
  * 请关注事件优先级
  *
  * 通过 Process::signal 设置的信号处理回调函数

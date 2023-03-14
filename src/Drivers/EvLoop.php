@@ -4,8 +4,8 @@
  *
  * Redistributions of files must retain the above copyright notice.
  *
- * @author    chaz6chez<250220719@qq.com>
- * @copyright chaz6chez<250220719@qq.com>
+ * @author    chaz6chez<chaz6chez1993@outlook.com>
+ * @copyright chaz6chez<chaz6chez1993@outlook.com>
  * @link      https://github.com/workbunny/event-loop
  * @license   https://github.com/workbunny/event-loop/blob/main/LICENSE
  */
@@ -17,7 +17,6 @@ use Ev;
 use EvIo;
 use EvSignal;
 use EvTimer;
-use WorkBunny\EventLoop\Exception\LoopException;
 use EvLoop as BaseEvLoop;
 use Closure;
 
@@ -29,13 +28,21 @@ class EvLoop extends AbstractLoop
     /** @inheritDoc */
     public function __construct()
     {
-        if(!extension_loaded('ev')){
-            throw new LoopException('ext-ev not support');
-        }
-
         parent::__construct();
 
         $this->_loop = new BaseEvLoop();
+    }
+
+    /** @inheritDoc */
+    public function getExtName(): string
+    {
+        return 'ev';
+    }
+
+    /** @inheritDoc */
+    public function hasExt(): bool
+    {
+        return extension_loaded($this->getExtName());
     }
 
     /** @inheritDoc */
@@ -131,12 +138,16 @@ class EvLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function addTimer(float $delay, float $repeat, Closure $callback): string
+    public function addTimer(float $delay, float|false $repeat, Closure $callback): string
     {
-        $event = $this->_loop->timer($delay, $repeat, function () use (&$event, $repeat, $callback){
-            $callback();
+        $event = $this->_loop->timer($delay, $repeat, $func = static function () use (&$event, &$func, $repeat, $callback) {
+            \call_user_func($callback);
+            $timerId = spl_object_hash($event);
             if($repeat === 0.0){
-                $this->_storage->del(spl_object_hash($event));
+                $this->_storage->set($timerId, $this->_loop->timer(0.0, $repeat, $func));
+            }
+            if($repeat === false){
+                $this->_storage->del($timerId);
             }
         });
         return $this->_storage->add(spl_object_hash($event), $event);

@@ -18,5 +18,5 @@ namespace WorkBunny\EventLoop\Exception;
  * @package WorkBunny\WorkBunny\EventLoop\Exception
  * @author chaz6chez
  */
-class LoopException extends \RuntimeException
+class InvalidArgumentException extends \RuntimeException
 {}

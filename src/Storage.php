@@ -4,8 +4,8 @@
  *
  * Redistributions of files must retain the above copyright notice.
  *
- * @author    chaz6chez<250220719@qq.com>
- * @copyright chaz6chez<250220719@qq.com>
+ * @author    chaz6chez<chaz6chez1993@outlook.com>
+ * @copyright chaz6chez<chaz6chez1993@outlook.com>
  * @link      https://github.com/workbunny/event-loop
  * @license   https://github.com/workbunny/event-loop/blob/main/LICENSE
  */
@@ -26,7 +26,7 @@ final class Storage
      * @param mixed|null $value
      * @return string
      */
-    public function add(string $key, $value): string
+    public function add(string $key, mixed $value): string
     {
         $this->_storage[$key] = $value;
         $this->_count ++;
@@ -38,7 +38,7 @@ final class Storage
      * @param mixed|null $value
      * @return string
      */
-    public function set(string $key, $value): string
+    public function set(string $key, mixed $value): string
     {
         if($this->exist($key)){
             $this->_storage[$key] = $value;
@@ -61,7 +61,7 @@ final class Storage
      * @param string $key
      * @return mixed|null
      */
-    public function get(string $key)
+    public function get(string $key): mixed
     {
         return $this->exist($key) ? $this->_storage[$key] : null;
     }

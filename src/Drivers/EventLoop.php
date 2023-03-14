@@ -4,8 +4,8 @@
  *
  * Redistributions of files must retain the above copyright notice.
  *
- * @author    chaz6chez<250220719@qq.com>
- * @copyright chaz6chez<250220719@qq.com>
+ * @author    chaz6chez<chaz6chez1993@outlook.com>
+ * @copyright chaz6chez<chaz6chez1993@outlook.com>
  * @link      https://github.com/workbunny/event-loop
  * @license   https://github.com/workbunny/event-loop/blob/main/LICENSE
  */
@@ -16,7 +16,6 @@ namespace WorkBunny\EventLoop\Drivers;
 use EventConfig;
 use EventBase;
 use Event;
-use WorkBunny\EventLoop\Exception\LoopException;
 use Closure;
 
 class EventLoop extends AbstractLoop
@@ -27,23 +26,31 @@ class EventLoop extends AbstractLoop
     /** @inheritDoc */
     public function __construct()
     {
-        if(!extension_loaded('event')){
-            throw new LoopException('ext-event not support');
-        }
-
         parent::__construct();
         $config = new EventConfig();
         if (\DIRECTORY_SEPARATOR !== '\\') {
-            $config->requireFeatures(\EventConfig::FEATURE_FDS);
+            $config->requireFeatures(EventConfig::FEATURE_FDS);
         }
         $this->_eventBase = new EventBase($config);
+    }
+
+    /** @inheritDoc */
+    public function getExtName(): string
+    {
+        return 'event';
+    }
+
+    /** @inheritDoc */
+    public function hasExt(): bool
+    {
+        return extension_loaded($this->getExtName());
     }
 
     /** @inheritDoc */
     public function addReadStream($stream, Closure $handler): void
     {
         if(is_resource($stream) and !isset($this->_readFds[$key = (int)$stream])){
-            $event = new Event($this->_eventBase, $stream, \Event::READ | \Event::PERSIST, $handler);
+            $event = new Event($this->_eventBase, $stream, Event::READ | Event::PERSIST, $handler);
             if ($event->add()) {
                 $this->_reads[$key] = $event;
                 $this->_readFds[$key] = $stream;
@@ -114,17 +121,22 @@ class EventLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function addTimer(float $delay, float $repeat, Closure $callback): string
+    public function addTimer(float $delay, float|false $repeat, Closure $callback): string
     {
-        $event = new Event($this->_eventBase, -1, \Event::TIMEOUT, function () use(&$event, $repeat, $callback){
+        $event = new Event($this->_eventBase, -1, Event::TIMEOUT, function () use(&$event, $repeat, $callback){
             $id = spl_object_hash($event);
-
-            $callback();
-
-            if($repeat === 0.0){
+            \call_user_func($callback);
+            if($repeat === false){
                 $this->_storage->del($id);
+            }elseif ($repeat === 0.0){
+                $event = new Event($this->_eventBase, -1, Event::TIMEOUT, function () use($event, $repeat, $callback) {
+                    \call_user_func($callback);
+                    $event->add($repeat);
+                });
+                $event->add($repeat);
+                $this->_storage->set($id, $event);
             }else{
-                $event = new Event($this->_eventBase, -1, \Event::TIMEOUT | \Event::PERSIST, $callback);
+                $event = new Event($this->_eventBase, -1, Event::TIMEOUT | Event::PERSIST, $callback);
                 $event->add($repeat);
                 $this->_storage->set($id, $event);
             }

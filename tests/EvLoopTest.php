@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace WorkBunny\Test;
+namespace WorkBunny\Tests;
 
 use EvIo;
 use http\Encoding\Stream;
 use WorkBunny\EventLoop\Drivers\AbstractLoop;
 use WorkBunny\EventLoop\Drivers\EvLoop;
-use WorkBunny\Test\Events\StreamsTest;
+use WorkBunny\Tests\Events\StreamsTest;
 
 class EvLoopTest extends AbstractLoopTest
 {
