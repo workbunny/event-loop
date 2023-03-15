@@ -12,10 +12,11 @@ use WorkBunny\EventLoop\Loop;
 // PHP Wile
 $count = 0;
 $start = microtime(true);
+$mem = memory_get_usage();
 while (true){
     $count ++;
     if($start + 1 <= microtime(true)){
-        dump('PHP-While 1s loop-counts: ' . $count);
+        dump('PHP-While 1s loop-counts: ' . $count, 'Memory Usage: ' . memory_get_usage() - $mem . ' B');
         break;
     }
 }
@@ -24,58 +25,60 @@ while (true){
 $loop = Loop::create(NativeLoop::class);
 $count = 0;
 $start = microtime(true);
-$loop->addTimer(0.0, 0.0, function () use (&$count, $start, $loop){
+$mem = memory_get_usage();
+$loop->addTimer(0.0, 0.0, function () use (&$count, $start, $loop, $mem){
     $count ++;
     if($start + 1 >= microtime(true)){
         return;
     }
-    dump(get_class($loop) . ' 1s loop-counts: ' . $count);
+    dump(get_class($loop) . ' 1s loop-counts: ' . $count, 'Memory Usage: ' . memory_get_usage() - $mem . ' B');
     $loop->destroy();
 });
 $loop->loop();
-Loop::remove();
 
 // EventLoop
 $loop = Loop::create(EventLoop::class);
 $count = 0;
 $start = microtime(true);
-$loop->addTimer(0.0, 0.0, function () use (&$count, $start, $loop){
+$mem = memory_get_usage();
+$loop->addTimer(0.0, 0.0, function () use (&$count, $start, $loop, $mem){
     $count ++;
     if($start + 1 >= microtime(true)){
         return;
     }
-    dump(get_class($loop) . ' 1s loop-counts: ' . $count);
+    dump(get_class($loop) . ' 1s loop-counts: ' . $count, 'Memory Usage: ' . memory_get_usage() - $mem . ' B');
     $loop->destroy();
 });
 $loop->loop();
-Loop::remove();
 
 // EvLoop
 $loop = Loop::create(EvLoop::class);
 $count = 0;
 $start = microtime(true);
-$loop->addTimer(0.0, 0.00001, function () use (&$count, $start, $loop){
+$mem = memory_get_usage();
+$loop->addTimer(0.0, 0.00001, function () use (&$count, $start, $loop, $mem){
     $count ++;
     if($start + 1 >= microtime(true)){
         return;
     }
-    dump(get_class($loop) . ' 1s loop-counts: ' . $count);
+    dump(get_class($loop) . ' 1s loop-counts: ' . $count, 'Memory Usage: ' . memory_get_usage() - $mem . ' B');
     $loop->destroy();
 });
 $loop->loop();
-Loop::remove();
 
 // SwowLoop
 $loop = Loop::create(SwowLoop::class);
 $count = 0;
 $start = microtime(true);
-$loop->addTimer(0.0, 0.0, function () use (&$count, $start, $loop){
+$mem = memory_get_usage();
+$loop->addTimer(0.0, 0.0, function () use (&$count, $start, $loop, $mem){
     $count ++;
     if($start + 1 >= microtime(true)){
         return;
     }
-    dump(get_class($loop) . ' 1s loop-counts: ' . $count);
+    dump(get_class($loop) . ' 1s loop-counts: ' . $count, 'Memory Usage: ' . memory_get_usage() - $mem . ' B');
     $loop->destroy();
 });
 $loop->loop();
+
 Loop::remove();

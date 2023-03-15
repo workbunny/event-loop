@@ -129,12 +129,7 @@ class EventLoop extends AbstractLoop
             if($repeat === false){
                 $this->_storage->del($id);
             }elseif ($repeat === 0.0){
-                $event = new Event($this->_eventBase, -1, Event::TIMEOUT, function () use($event, $repeat, $callback) {
-                    \call_user_func($callback);
-                    $event->add($repeat);
-                });
                 $event->add($repeat);
-                $this->_storage->set($id, $event);
             }else{
                 $event = new Event($this->_eventBase, -1, Event::TIMEOUT | Event::PERSIST, $callback);
                 $event->add($repeat);
