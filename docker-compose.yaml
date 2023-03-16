@@ -7,7 +7,7 @@ services:
       context: ./
     image: workbunny-php
     volumes:
-      - /d/project:/var/www
+      - ./../:/var/www
 
     logging:
       driver: json-file

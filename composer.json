@@ -25,11 +25,12 @@
     "source": "https://github.com/workbunny/event-loop"
   },
   "require": {
-    "php": ">=8.0"
+    "php": ">=8.1"
   },
   "require-dev": {
-    "symfony/var-dumper": "^5.0",
-    "phpunit/phpunit": "^9.0"
+    "symfony/var-dumper": "^6.0",
+    "phpunit/phpunit": "^10.0",
+    "swow/swow": "^1.0"
   },
   "suggest": {
     "ext-event": "For EventLoop. ",

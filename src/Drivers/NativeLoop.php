@@ -127,14 +127,11 @@ class NativeLoop extends AbstractLoop
     public function loop(): void
     {
         $this->_stopped = false;
-
         while (!$this->_stopped) {
             if(!$this->_readFds and !$this->_writeFds and !$this->_signals and $this->_storage->isEmpty()){
                 break;
             }
-
             \pcntl_signal_dispatch();
-
             $writes = $this->_writeFds;
             $reads = $this->_readFds;
             $excepts = [];
@@ -143,7 +140,6 @@ class NativeLoop extends AbstractLoop
                     $excepts[$key] = $socket;
                 }
             }
-
             if($writes or $reads or $excepts){
                 try {
                     @\stream_select($reads, $writes, $excepts, 0,0);
@@ -155,7 +151,6 @@ class NativeLoop extends AbstractLoop
                         ($this->_reads[$key])($stream);
                     }
                 }
-
                 foreach ($writes as $stream) {
                     $key = (int)$stream;
                     if (isset($this->_writes[$key])) {
@@ -163,12 +158,7 @@ class NativeLoop extends AbstractLoop
                     }
                 }
             }
-
-            \pcntl_signal_dispatch();
-
             $this->_tick();
-
-            \usleep(0);
         }
     }
 
@@ -182,8 +172,8 @@ class NativeLoop extends AbstractLoop
     protected function _tick(): void
     {
         $count = $this->_queue->count();
-        while ($count--){
-            $data = $this->_queue->top();
+        while ($count --){
+            $data = $this->_queue->current();
             $runTime = -$data['priority'];
             $timerId = $data['data'];
             /** @var Timer $data */
@@ -192,7 +182,6 @@ class NativeLoop extends AbstractLoop
                 $callback = $data->getHandler();
                 $timeNow = \hrtime(true) * 1e-9;
                 if (($runTime - $timeNow) <= 0) {
-                    $this->_queue->extract();
                     \call_user_func($callback);
                     if($repeat !== false){
                         $nextTime = $timeNow + $repeat;
@@ -200,6 +189,7 @@ class NativeLoop extends AbstractLoop
                     }else{
                         $this->delTimer($timerId);
                     }
+                    $this->_queue->next();
                 }
             }
         }
