@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * This file is part of workbunny.
  *
@@ -9,8 +9,6 @@
  * @link      https://github.com/workbunny/event-loop
  * @license   https://github.com/workbunny/event-loop/blob/main/LICENSE
  */
-declare(strict_types=1);
-
 namespace WorkBunny\EventLoop\Drivers;
 
 use Ev;
@@ -138,10 +136,10 @@ class EvLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function addTimer(float $delay, float|false $repeat, Closure $callback): string
+    public function addTimer(float $delay, float|false $repeat, Closure $handler): string
     {
-        $event = $this->_loop->timer($delay, $repeat, $func = static function () use (&$event, &$func, $repeat, $callback) {
-            \call_user_func($callback);
+        $event = $this->_loop->timer($delay, $repeat, $func = static function () use (&$event, &$func, $repeat, $handler) {
+            \call_user_func($handler);
             $timerId = spl_object_hash($event);
             if($repeat === 0.0){
                 $this->_storage->set($timerId, $this->_loop->timer(0.0, $repeat, $func));
@@ -164,7 +162,7 @@ class EvLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function loop(): void
+    public function run(): void
     {
         if($this->_storage->isEmpty() and !$this->_reads and !$this->_writes and !$this->_signals){
             return;
@@ -173,8 +171,15 @@ class EvLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function destroy(): void
+    public function stop(): void
     {
         $this->_loop->stop();
+    }
+
+    /** @inheritDoc */
+    public function destroy(): void
+    {
+        $this->stop();
+        $this->clear();
     }
 }

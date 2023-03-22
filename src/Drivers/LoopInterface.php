@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * This file is part of workbunny.
  *
@@ -9,8 +9,6 @@
  * @link      https://github.com/workbunny/event-loop
  * @license   https://github.com/workbunny/event-loop/blob/main/LICENSE
  */
-declare(strict_types=1);
-
 namespace WorkBunny\EventLoop\Drivers;
 
 use Closure;
@@ -19,17 +17,22 @@ use WorkBunny\EventLoop\Exception\InvalidArgumentException;
 interface LoopInterface
 {
     /**
-     * @return string
+     * 如无需拓展则返回null
+     *
+     * @return string|null
      */
-    public function getExtName(): string;
+    public function getExtName(): null|string;
 
     /**
+     * 是否存在拓展
+     *
      * @return bool
      */
     public function hasExt(): bool;
 
     /**
-     * 创建信号处理
+     * 添加信号处理器
+     *
      * @param int $signal
      * @param Closure $handler
      * @throws InvalidArgumentException 当signal参数为非正整数时将抛出该异常
@@ -37,67 +40,84 @@ interface LoopInterface
     public function addSignal(int $signal, Closure $handler): void;
 
     /**
-     * 移除信号处理
+     * 移除信号处理器
+     *
      * @param int $signal
      * @throws InvalidArgumentException 当signal参数为非正整数时将抛出该异常
      */
     public function delSignal(int $signal): void;
 
     /**
-     * 创建读流
+     * 添加读流处理器
+     *
      * @param resource $stream
      * @param Closure $handler
      */
     public function addReadStream($stream, Closure $handler): void;
 
     /**
-     * 移除读流
+     * 移除读流处理器
+     *
      * @param resource $stream
      */
     public function delReadStream($stream): void;
 
     /**
-     * 创建写流
+     * 创建写流处理器
+     *
      * @param resource $stream
      * @param Closure $handler
      */
     public function addWriteStream($stream, Closure $handler): void;
 
     /**
-     * 移除写流
+     * 移除写流处理器
+     *
      * @param resource $stream
      */
     public function delWriteStream($stream): void;
 
     /**
-     * delay=0.0 && repeat=false : 在下一个loop周期内执行一次callback()；
-     * delay=0.0 && repeat=0.0 : 在每一个loop周期内都将执行一次callback()；
-     * delay=0.0 && repeat>0.0 : 立即开始间隔为repeat周期的定时任务执行callback()；
-     * delay>0.0 && repeat=0.0 : 延迟delay执行一次callback()；
-     * delay>0.0 && repeat>0.0 : 延迟delay执行一次callback()后开始间隔为repeat周期的定时任务执行callback()；
+     * 创建定时处理器
+     * delay=0.0 && repeat=false : 在下一个loop周期内调用一次handler；
+     * delay=0.0 && repeat=0.0 : 在每一个loop周期内都将调用一次handler；
+     * delay=0.0 && repeat>0.0 : 立即开始间隔为repeat周期的定时任务调用handler；
+     * delay>0.0 && repeat=0.0 : 延迟delay调用一次handler；
+     * delay>0.0 && repeat>0.0 : 延迟delay调用一次handler后开始间隔为repeat周期的定时任务调用handler；
      *
      * @param float $delay
      * @param float|false $repeat
-     * @param Closure $callback
+     * @param Closure $handler
      * @return string
      * @throws InvalidArgumentException delay或repeat为负数时抛出该异常
      */
-    public function addTimer(float $delay, float|false $repeat, Closure $callback): string;
+    public function addTimer(float $delay, float|false $repeat, Closure $handler): string;
 
     /**
-     * 移除定时触发器
+     * 移除定时处理器
      *
      * @param string $timerId
      */
     public function delTimer(string $timerId): void;
 
     /**
-     * main loop.
+     * 运行loop
+     *
+     * @return void
      */
-    public function loop(): void;
+    public function run(): void;
 
     /**
-     * destroy loop.
+     * 暂停loop
+     *
+     * @return void
+     */
+    public function stop(): void;
+
+    /**
+     * 与stop()不同的是，该方法会暂停loop并清除所有处理器
+     *
+     * @return void
      */
     public function destroy(): void;
 }

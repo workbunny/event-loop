@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * This file is part of workbunny.
  *
@@ -9,8 +9,6 @@
  * @link      https://github.com/workbunny/event-loop
  * @license   https://github.com/workbunny/event-loop/blob/main/LICENSE
  */
-declare(strict_types=1);
-
 namespace WorkBunny\EventLoop\Drivers;
 
 use Closure;
@@ -43,7 +41,7 @@ class OpenSwooleLoop extends AbstractLoop
     public function addReadStream($stream, Closure $handler): void
     {
         if(is_resource($stream) and !isset($this->_readFds[$key = (int)$stream])){
-            Event::add($stream,$handler,null,SWOOLE_EVENT_READ);
+            Event::add($stream,$handler,null,\SWOOLE_EVENT_READ);
             $this->_readFds[$key] = $stream;
         }
     }
@@ -54,7 +52,7 @@ class OpenSwooleLoop extends AbstractLoop
         if(
             is_resource($stream) and
             isset($this->_readFds[$key = (int)$stream]) and
-            Event::isset($stream,SWOOLE_EVENT_READ)
+            Event::isset($stream,\SWOOLE_EVENT_READ)
         ){
             Event::del($stream);
             unset($this->_readFds[$key]);
@@ -65,7 +63,7 @@ class OpenSwooleLoop extends AbstractLoop
     public function addWriteStream($stream, Closure $handler): void
     {
         if(is_resource($stream) and !isset($this->_writeFds[$key = (int)$stream])){
-            Event::add($stream,null,$handler,SWOOLE_EVENT_WRITE);
+            Event::add($stream,null,$handler,\SWOOLE_EVENT_WRITE);
             $this->_writeFds[$key] = $stream;
         }
     }
@@ -76,7 +74,7 @@ class OpenSwooleLoop extends AbstractLoop
         if(
             is_resource($stream) and
             isset($this->_writeFds[$key = (int)$stream]) and
-            Event::isset($stream,SWOOLE_EVENT_WRITE)
+            Event::isset($stream,\SWOOLE_EVENT_WRITE)
         ){
             Event::del($stream);
             unset($this->_writeFds[$key]);
@@ -105,13 +103,13 @@ class OpenSwooleLoop extends AbstractLoop
      * @inheritDoc
      * @param float $delay
      * @param float|false $repeat
-     * @param Closure $callback
+     * @param Closure $handler
      * @return string
      * @throws LoopException
      */
-    public function addTimer(float $delay, float|false $repeat, Closure $callback): string
+    public function addTimer(float $delay, float|false $repeat, Closure $handler): string
     {
-        $timer = new TimerObj($delay, $repeat, $callback);
+        $timer = new TimerObj($delay, $repeat, $handler);
         $timerId = spl_object_hash($timer);
         $delay = $this->_floatToInt($delay);
         $repeat = $this->_floatToInt($repeat);
@@ -120,25 +118,25 @@ class OpenSwooleLoop extends AbstractLoop
 
         if($repeat === 0){
             if($equals){
-                Event::defer(function () use($timerId, $callback){
-                    $callback();
+                Event::defer(function () use($timerId, $handler){
+                    $handler();
                     $this->_storage->del($timerId);
                 });
             }else{
-                $id = Timer::after($delay, function () use($timerId, $callback){
-                    $callback();
+                $id = Timer::after($delay, function () use($timerId, $handler){
+                    $handler();
                     $this->_storage->del($timerId);
                 });
             }
         }else{
             if($equals){
-                $id = Timer::tick($repeat, $callback);
+                $id = Timer::tick($repeat, $handler);
             }else{
-                Event::defer(function() use($timerId, &$id, $repeat, $callback){
-                    if($id = Timer::tick($repeat, $callback)){
+                Event::defer(function() use($timerId, &$id, $repeat, $handler){
+                    if($id = Timer::tick($repeat, $handler)){
                         $this->_storage->set($timerId, $id);
                     }
-                    $callback();
+                    $handler();
                 });
             }
         }
@@ -156,15 +154,22 @@ class OpenSwooleLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function loop(): void
+    public function run(): void
     {
         Event::wait();
     }
 
     /** @inheritDoc */
-    public function destroy(): void
+    public function stop(): void
     {
         Event::exit();
+    }
+
+    /** @inheritDoc */
+    public function destroy(): void
+    {
+        $this->stop();
+        $this->clear();
     }
 
     /** 获取小数点位数 */

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * This file is part of workbunny.
  *
@@ -9,8 +9,6 @@
  * @link      https://github.com/workbunny/event-loop
  * @license   https://github.com/workbunny/event-loop/blob/main/LICENSE
  */
-declare(strict_types=1);
-
 namespace WorkBunny\EventLoop\Drivers;
 
 use Closure;
@@ -158,14 +156,12 @@ class SwowLoop extends AbstractLoop
         }
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function addTimer(float $delay, float|false $repeat, Closure $callback): string
+    /** @inheritDoc */
+    public function addTimer(float $delay, float|false $repeat, Closure $handler): string
     {
         $delay = $this->_floatToInt($delay);
         $repeat = $this->_floatToInt($repeat);
-        $coroutine = Coroutine::run(static function () use ($delay, $repeat, $callback): void {
+        $coroutine = Coroutine::run(static function () use ($delay, $repeat, $handler): void {
             $first = true;
             while (true) {
                 if($repeat === false){
@@ -177,7 +173,7 @@ class SwowLoop extends AbstractLoop
                 }else{
                     msleep($repeat);
                 }
-                \call_user_func($callback);
+                \call_user_func($handler);
                 $first = false;
             }
         });
@@ -195,16 +191,23 @@ class SwowLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function loop(): void
+    public function run(): void
     {
         waitAll();
     }
 
     /** @inheritDoc */
-    public function destroy(): void
+    public function stop(): void
     {
         Coroutine::killAll();
         Coroutine::getMain()->kill();
+    }
+
+    /** @inheritDoc */
+    public function destroy(): void
+    {
+        $this->stop();
+        $this->clear();
     }
 
     /** 获取小数点位数 */

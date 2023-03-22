@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * This file is part of workbunny.
  *
@@ -9,8 +9,6 @@
  * @link      https://github.com/workbunny/event-loop
  * @license   https://github.com/workbunny/event-loop/blob/main/LICENSE
  */
-declare(strict_types=1);
-
 namespace WorkBunny\EventLoop\Drivers;
 
 use WorkBunny\EventLoop\Timer;
@@ -109,9 +107,9 @@ class NativeLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function addTimer(float $delay, float|false $repeat, Closure $callback): string
+    public function addTimer(float $delay, float|false $repeat, Closure $handler): string
     {
-        $timer = new Timer($delay, $repeat, $callback);
+        $timer = new Timer($delay, $repeat, $handler);
         $runTime = \hrtime(true) * 1e-9 + $delay;
         $this->_queue->insert($id = spl_object_hash($timer), -$runTime);
         return $this->_storage->add($id, $timer);
@@ -124,7 +122,7 @@ class NativeLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function loop(): void
+    public function run(): void
     {
         $this->_stopped = false;
         while (!$this->_stopped) {
@@ -163,9 +161,24 @@ class NativeLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function destroy(): void
+    public function stop(): void
     {
         $this->_stopped = true;
+    }
+
+    /** @inheritDoc */
+    public function destroy(): void
+    {
+        $this->stop();
+        $this->clear();
+    }
+
+    /** @inheritDoc */
+    public function clear(): void
+    {
+        parent::clear();
+        $this->_queue = new SplPriorityQueue();
+        $this->_queue->setExtractFlags(SplPriorityQueue::EXTR_BOTH);
     }
 
     /** 执行 */

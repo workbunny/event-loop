@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * This file is part of workbunny.
  *
@@ -9,8 +9,6 @@
  * @link      https://github.com/workbunny/event-loop
  * @license   https://github.com/workbunny/event-loop/blob/main/LICENSE
  */
-declare(strict_types=1);
-
 namespace WorkBunny\EventLoop\Drivers;
 
 use EventConfig;
@@ -121,17 +119,17 @@ class EventLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function addTimer(float $delay, float|false $repeat, Closure $callback): string
+    public function addTimer(float $delay, float|false $repeat, Closure $handler): string
     {
-        $event = new Event($this->_eventBase, -1, Event::TIMEOUT, function () use(&$event, $repeat, $callback){
+        $event = new Event($this->_eventBase, -1, Event::TIMEOUT, function () use(&$event, $repeat, $handler){
             $id = spl_object_hash($event);
-            \call_user_func($callback);
+            \call_user_func($handler);
             if($repeat === false){
                 $this->_storage->del($id);
             }elseif ($repeat === 0.0){
                 $event->add($repeat);
             }else{
-                $event = new Event($this->_eventBase, -1, Event::TIMEOUT | Event::PERSIST, $callback);
+                $event = new Event($this->_eventBase, -1, Event::TIMEOUT | Event::PERSIST, $handler);
                 $event->add($repeat);
                 $this->_storage->set($id, $event);
             }
@@ -152,7 +150,7 @@ class EventLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function loop(): void
+    public function run(): void
     {
         if($this->_storage->isEmpty() and !$this->_reads and !$this->_writes and !$this->_signals){
             return;
@@ -165,9 +163,16 @@ class EventLoop extends AbstractLoop
     }
 
     /** @inheritDoc */
-    public function destroy(): void
+    public function stop(): void
     {
         $this->_eventBase->stop();
+    }
+
+    /** @inheritDoc */
+    public function destroy(): void
+    {
+        $this->stop();
+        $this->clear();
     }
 }
 
