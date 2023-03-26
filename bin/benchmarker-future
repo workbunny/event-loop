@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php declare(strict_types=1);
 
+use WorkBunny\Tests\Benchmarks\Future\FutureTestsFactory;
+
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-\WorkBunny\Tests\Benchmarks\Future\AbstractFuture::start();
+(new FutureTestsFactory())->startTests();

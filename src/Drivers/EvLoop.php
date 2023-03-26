@@ -138,15 +138,20 @@ class EvLoop extends AbstractLoop
     /** @inheritDoc */
     public function addTimer(float $delay, float|false $repeat, Closure $handler): string
     {
-        $event = $this->_loop->timer($delay, $repeat, $func = static function () use (&$event, &$func, $repeat, $handler) {
-            \call_user_func($handler);
-            $timerId = spl_object_hash($event);
-            if($repeat === 0.0){
-                $this->_storage->set($timerId, $this->_loop->timer(0.0, $repeat, $func));
+        $event = $this->_loop->timer($delay, $repeat, $func = function () use (&$event, &$func, $repeat, $handler) {
+            try {
+                \call_user_func($handler);
+                $timerId = spl_object_hash($event);
+                if($repeat === 0.0){
+                    $this->_storage->set($timerId, $this->_loop->timer(0.0, $repeat, $func));
+                }
+                if($repeat === false){
+                    $this->_storage->del($timerId);
+                }
+            }catch (\Throwable $throwable){
+                dump($throwable);
             }
-            if($repeat === false){
-                $this->_storage->del($timerId);
-            }
+
         });
         return $this->_storage->add(spl_object_hash($event), $event);
     }

@@ -22,6 +22,9 @@ use function msleep;
 class SwowLoop extends AbstractLoop
 {
 
+    /** @var bool  */
+    protected bool $_stopped = false;
+
     /** @inheritDoc */
     public function getExtName(): string
     {
@@ -43,7 +46,7 @@ class SwowLoop extends AbstractLoop
             Coroutine::run(function () use ($handler, $key): void {
                 try {
                     $this->_reads[$key] = Coroutine::getCurrent();
-                    while (true) {
+                    while (!$this->_stopped) {
                         if (!isset($this->_readFds[$key])) {
                             break;
                         }
@@ -88,7 +91,7 @@ class SwowLoop extends AbstractLoop
             Coroutine::run(function () use ($handler, $key): void {
                 try {
                     $this->_writes[$key] = Coroutine::getCurrent();
-                    while (true) {
+                    while (!$this->_stopped) {
                         if (!isset($this->_writeFds[$key])) {
                             break;
                         }
@@ -130,9 +133,9 @@ class SwowLoop extends AbstractLoop
         if(!isset($this->_signals[$signal])){
             // 占位
             $this->_signals[$signal] = null;
-            Coroutine::run(static function () use ($signal, $handler): void {
+            Coroutine::run(function () use ($signal, $handler): void {
                 $this->_signals[$signal] = Coroutine::getCurrent();
-                while (true) {
+                while (!$this->_stopped) {
                     try {
                         Signal::wait($signal);
                         if (!isset($this->_signals[$signal])) {
@@ -161,9 +164,9 @@ class SwowLoop extends AbstractLoop
     {
         $delay = $this->_floatToInt($delay);
         $repeat = $this->_floatToInt($repeat);
-        $coroutine = Coroutine::run(static function () use ($delay, $repeat, $handler): void {
+        $coroutine = Coroutine::run(function () use ($delay, $repeat, $handler): void {
             $first = true;
-            while (true) {
+            while (!$this->_stopped) {
                 if($repeat === false){
                     $this->_storage->del(spl_object_hash(Coroutine::getCurrent()));
                     break;
@@ -193,14 +196,15 @@ class SwowLoop extends AbstractLoop
     /** @inheritDoc */
     public function run(): void
     {
+        $this->_stopped = false;
         waitAll();
     }
 
     /** @inheritDoc */
     public function stop(): void
     {
+        $this->_stopped = true;
         Coroutine::killAll();
-        Coroutine::getMain()->kill();
     }
 
     /** @inheritDoc */

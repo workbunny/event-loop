@@ -2,17 +2,15 @@
 
 namespace WorkBunny\Tests\Benchmarks\Future;
 
-class WhileFuture extends AbstractFuture
+use WorkBunny\Tests\Benchmarks\AbstractBenchmark;
+
+class WhileFuture extends AbstractBenchmark
 {
-    public static function run(): void
+    public function handler(): void
     {
         while (true){
-            self::setCount(self::getCount() + 1);
-            if(self::getInitialTime() + 1 <= microtime(true)) {
-                dump(
-                    'PHP-While 1s loop-counts: ' . self::getCount(),
-                    'Memory Usage: ' . self::getUsedMemory() . ' B'
-                );
+            $this->setCount($this->getCount() + 1);
+            if($this->getInitialTime() + 1 <= microtime(true)) {
                 break;
             }
         }
