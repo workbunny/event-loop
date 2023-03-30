@@ -4,7 +4,7 @@ services:
     restart: always
     container_name: workbunny-php
     build:
-      context: ./
+      context: ..
     image: workbunny-php
     volumes:
       - ./../:/var/www
