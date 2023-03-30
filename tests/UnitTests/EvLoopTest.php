@@ -1,16 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace WorkBunny\Tests;
+namespace WorkBunny\Tests\UnitTests;
 
 use EvIo;
-use http\Encoding\Stream;
-use PHPUnit\Framework\Attributes\TestDox;
-use WorkBunny\EventLoop\Drivers\AbstractLoop;
 use WorkBunny\EventLoop\Drivers\EvLoop;
-use WorkBunny\Tests\Events\StreamsTest;
+use WorkBunny\tests\UnitTests\Units\StreamsUnit;
 
-class EvLoopTest extends AbstractLoopTest
+class EvLoopTest extends AbstractTestCase
 {
     /** @inheritDoc */
     public function setLoop(): EvLoop
@@ -40,7 +37,7 @@ class EvLoopTest extends AbstractLoopTest
     }
 
     /**
-     * @see AbstractLoopTest::testReadStreamBeforeTimer()
+     * @see AbstractTestCase::testReadStreamBeforeTimer()
      * @dataProvider provider
      * @param bool $bio
      * @return void
@@ -51,7 +48,7 @@ class EvLoopTest extends AbstractLoopTest
     }
 
     /**
-     * @see AbstractLoopTest::testWriteStreamBeforeTimer()
+     * @see AbstractTestCase::testWriteStreamBeforeTimer()
      * @dataProvider provider
      * @param bool $bio
      * @return void
@@ -62,14 +59,18 @@ class EvLoopTest extends AbstractLoopTest
     }
 
     /**
-     * @see AbstractLoopTest::testReadStreamBeforeTimer() 与之相反
+     * @see AbstractTestCase::testReadStreamBeforeTimer() 与之相反
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
     public function testReadStreamAfterTimer(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
 
@@ -91,7 +92,7 @@ class EvLoopTest extends AbstractLoopTest
     }
 
     /**
-     * @see AbstractLoopTest::testWriteStreamBeforeTimer() 与之相反
+     * @see AbstractTestCase::testWriteStreamBeforeTimer() 与之相反
      * @dataProvider provider
      * @param bool $bio
      * @return void
@@ -99,7 +100,11 @@ class EvLoopTest extends AbstractLoopTest
     public function testWriteStreamAfterTimer(bool $bio): void
     {
 
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($output, $bio);
         fwrite($output, 'foo' . PHP_EOL);
 
@@ -119,14 +124,18 @@ class EvLoopTest extends AbstractLoopTest
     }
 
     /**
-     * @see StreamsTest::testReadStreamHandlerReceivesDataFromStreamReference()
-     * @dataProvider provider
      * @param bool $bio
      * @return void
+     *@see StreamsUnit::testReadStreamHandlerReceivesDataFromStreamReference()
+     * @dataProvider provider
      */
     public function testReadStreamHandlerReceivesDataFromStreamReference(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
 
@@ -155,15 +164,23 @@ class EvLoopTest extends AbstractLoopTest
     }
 
     /**
-     * @see StreamsTest::testRemoveReadStreams()
-     * @dataProvider provider
      * @param bool $bio
      * @return void
+     *@see StreamsUnit::testRemoveReadStreams()
+     * @dataProvider provider
      */
     public function testRemoveReadStreams(bool $bio): void
     {
-        list ($input1, $output1) = $this->createSocketPair();
-        list ($input2, $output2) = $this->createSocketPair();
+        list ($input1, $output1) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
+        list ($input2, $output2) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
 
         stream_set_blocking($input1, $bio);
         stream_set_blocking($input2, $bio);
@@ -189,15 +206,23 @@ class EvLoopTest extends AbstractLoopTest
     }
 
     /**
-     * @see StreamsTest::testRemoveWriteStreams()
-     * @dataProvider provider
      * @param bool $bio
      * @return void
+     *@see StreamsUnit::testRemoveWriteStreams()
+     * @dataProvider provider
      */
     public function testRemoveWriteStreams(bool $bio): void
     {
-        list ($input1) = $this->createSocketPair();
-        list ($input2) = $this->createSocketPair();
+        list ($input1) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
+        list ($input2) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
 
         stream_set_blocking($input1, $bio);
         stream_set_blocking($input2, $bio);

@@ -12,11 +12,11 @@ final class FutureTestsFactory
      * @var string[]
      */
     private array $_futureTests = [
-//        'while'           => WhileFuture::class,
-//        'while-has-sleep' => SleepWhileFuture::class,
-//        'native'          => NativeLoopFuture::class,
-//        'event'           => EventLoopFuture::class,
-//        'ev'              => EvLoopFuture::class,
+        'while'           => WhileFuture::class,
+        'while-has-sleep' => SleepWhileFuture::class,
+        'native'          => NativeLoopFuture::class,
+        'event'           => EventLoopFuture::class,
+        'ev'              => EvLoopFuture::class,
         'swow'            => SwowLoopFuture::class
     ];
 

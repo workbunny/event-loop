@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace WorkBunny\Tests\Events;
+namespace WorkBunny\Tests\UnitTests\Units;
 
-trait SignalsTest
+trait SignalsUnit
 {
 
     /**

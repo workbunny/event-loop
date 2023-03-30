@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace WorkBunny\Tests;
+namespace WorkBunny\Tests\UnitTests;
 
 use WorkBunny\EventLoop\Drivers\NativeLoop;
 
-class NativeLoopTest extends AbstractLoopTest
+class NativeLoopTest extends AbstractTestCase
 {
     /** 创建循环 */
     public function setLoop(): NativeLoop

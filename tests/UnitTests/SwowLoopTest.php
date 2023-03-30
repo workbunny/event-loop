@@ -1,15 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace WorkBunny\Tests;
+namespace WorkBunny\Tests\UnitTests;
 
-use Swoole\Process;
-use WorkBunny\EventLoop\Drivers\OpenSwooleLoop;
 use WorkBunny\EventLoop\Drivers\SwowLoop;
-use WorkBunny\Tests\Events\StreamsTest;
-use WorkBunny\Tests\Events\TimerTest;
 
-class SwowLoopTest extends AbstractLoopTest
+class SwowLoopTest extends AbstractTestCase
 {
     /** @inheritDoc */
     public function setLoop(): SwowLoop

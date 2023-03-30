@@ -1,13 +1,12 @@
-<?php
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
-namespace WorkBunny\Tests\Events;
+namespace WorkBunny\Tests\UnitTests\Units;
 
 use PHPUnit\Framework\Attributes\Medium;
 use WorkBunny\EventLoop\Drivers\LoopInterface;
 
 #[Medium]
-trait TimerTest
+trait TimerUnit
 {
     /**
      * 测试@Future 的创建及自动销毁

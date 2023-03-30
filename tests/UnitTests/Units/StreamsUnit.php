@@ -1,11 +1,8 @@
-<?php
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
-namespace WorkBunny\Tests\Events;
+namespace WorkBunny\Tests\UnitTests\Units;
 
-use PHPUnit\Framework\Attributes\DataProvider;
-
-trait StreamsTest
+trait StreamsUnit
 {
     public static function provider(): array
     {
@@ -24,7 +21,11 @@ trait StreamsTest
      */
     public function testAddReadStreamHandlerWhenSocketReceivesData(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
 
@@ -58,7 +59,11 @@ trait StreamsTest
      */
     public function testAddReadStreamHandlerWhenSocketCloses(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
 
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
@@ -93,7 +98,11 @@ trait StreamsTest
      */
     public function testAddReadStreamIgnoresSecondAddReadStream(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
 
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
@@ -125,7 +134,11 @@ trait StreamsTest
      */
     public function testReadStreamHandlerTriggeredMultiTimes(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
 
@@ -152,7 +165,11 @@ trait StreamsTest
      */
     public function testReadStreamHandlerReceivesDataFromStreamReference(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
 
@@ -186,7 +203,11 @@ trait StreamsTest
      */
     public function testRemoveReadStreamInstantly(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
         $count = 0;
@@ -210,7 +231,11 @@ trait StreamsTest
      */
     public function testRemoveReadStreamAfterReading(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
         $count = 0;
@@ -325,7 +350,11 @@ trait StreamsTest
      */
     public function testAddWriteStreamIgnoresSecondAddWriteStream(bool $bio): void
     {
-        list ($input) = $this->createSocketPair();
+        list ($input) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         $count1 = $count2 = 0;
         $this->getLoop()->addWriteStream($input, function() use(&$count1){
@@ -349,7 +378,11 @@ trait StreamsTest
      */
     public function testWriteStreamHandlerTriggeredMultiTimes(bool $bio): void
     {
-        list ($input) = $this->createSocketPair();
+        list ($input) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         $count = 0;
         $this->getLoop()->addWriteStream($input, function() use(&$count){
@@ -370,7 +403,11 @@ trait StreamsTest
      */
     public function testRemoveWriteStreamInstantly(bool $bio): void
     {
-        list ($input) = $this->createSocketPair();
+        list ($input) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         $count = 0;
         $this->getLoop()->addWriteStream($input, function() use(&$count){
@@ -390,7 +427,11 @@ trait StreamsTest
      */
     public function testRemoveWriteStreamAfterWriting(bool $bio): void
     {
-        list ($input) = $this->createSocketPair();
+        list ($input) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         $count = 0;
         $this->getLoop()->addWriteStream($input, function() use (&$count){
@@ -412,8 +453,16 @@ trait StreamsTest
      */
     public function testRemoveReadStreams(bool $bio): void
     {
-        list ($input1, $output1) = $this->createSocketPair();
-        list ($input2, $output2) = $this->createSocketPair();
+        list ($input1, $output1) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
+        list ($input2, $output2) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
 
         stream_set_blocking($input1, $bio);
         stream_set_blocking($input2, $bio);
@@ -446,8 +495,16 @@ trait StreamsTest
      */
     public function testRemoveWriteStreams(bool $bio): void
     {
-        list ($input1) = $this->createSocketPair();
-        list ($input2) = $this->createSocketPair();
+        list ($input1) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
+        list ($input2) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
 
         stream_set_blocking($input1, $bio);
         stream_set_blocking($input2, $bio);
@@ -475,7 +532,11 @@ trait StreamsTest
      */
     public function testRemoveStreamForReadOnly(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
         $count1 = $count2 = 0;
@@ -502,7 +563,11 @@ trait StreamsTest
      */
     public function testRemoveStreamForWriteOnly(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
         fwrite($output, 'foo' . PHP_EOL);
@@ -530,7 +595,11 @@ trait StreamsTest
      */
     public function testRemoveUnregisteredStream(bool $bio): void
     {
-        list ($stream) = $this->createSocketPair();
+        list ($stream) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($stream, $bio);
         $this->getLoop()->delReadStream($stream);
         $this->getLoop()->delWriteStream($stream);
@@ -547,7 +616,11 @@ trait StreamsTest
      */
     public function testReadStreamBeforeTimer(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
         fwrite($input, 'read' . PHP_EOL);
@@ -572,7 +645,11 @@ trait StreamsTest
      */
     public function testWriteStreamBeforeTimer(bool $bio): void
     {
-        list ($input, $output) = $this->createSocketPair();
+        list ($input, $output) = \stream_socket_pair(
+            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
+            STREAM_SOCK_STREAM,
+            STREAM_IPPROTO_IP
+        );
         stream_set_blocking($input, $bio);
         stream_set_blocking($output, $bio);
         fwrite($input, 'write' . PHP_EOL);

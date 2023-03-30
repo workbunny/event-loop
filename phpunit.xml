@@ -10,8 +10,8 @@
          colors="true"
          stopOnWarning="true">
     <testsuites>
-        <testsuite name="event">
-            <directory>tests</directory>
+        <testsuite name="event-loop">
+            <directory>tests/UnitTests</directory>
         </testsuite>
     </testsuites>
 </phpunit>

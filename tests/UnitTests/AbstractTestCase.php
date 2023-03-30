@@ -1,13 +1,20 @@
 <?php
 declare(strict_types=1);
 
-namespace WorkBunny\Tests;
+namespace WorkBunny\Tests\UnitTests;
 
 use PHPUnit\Framework\TestCase;
 use WorkBunny\EventLoop\Drivers\AbstractLoop;
+use WorkBunny\Tests\UnitTests\Units\SignalsUnit;
+use WorkBunny\Tests\UnitTests\Units\StreamsUnit;
+use WorkBunny\Tests\UnitTests\Units\TimerUnit;
 
-abstract class AbstractTest extends TestCase
+abstract class AbstractTestCase extends TestCase
 {
+    use TimerUnit;
+    use SignalsUnit;
+    use StreamsUnit;
+
     /** @var float 模拟loop间隔1ms */
     public float $tickTimeout = 0.001;
     /** @var ?string */
@@ -50,16 +57,6 @@ abstract class AbstractTest extends TestCase
     public function getLoop(): ? AbstractLoop
     {
         return $this->loop;
-    }
-
-    /** 创建socket */
-    public function createSocketPair(): bool|array
-    {
-        return stream_socket_pair(
-            (DIRECTORY_SEPARATOR === '\\') ? STREAM_PF_INET : STREAM_PF_UNIX,
-            STREAM_SOCK_STREAM,
-            STREAM_IPPROTO_IP
-        );
     }
 
     /**
