@@ -15,6 +15,7 @@ use Closure;
 use Swow\Coroutine;
 use Swow\Signal;
 use Swow\SignalException;
+use Swow\Sync\WaitGroup;
 use WorkBunny\EventLoop\Exception\InvalidArgumentException;
 use function Swow\Sync\waitAll;
 use function msleep;

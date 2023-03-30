@@ -20,6 +20,9 @@ class NativeLoop extends AbstractLoop
     /** @var SplPriorityQueue 优先队列 */
     protected SplPriorityQueue $_queue;
 
+    /** @var SplPriorityQueue  */
+    protected SplPriorityQueue $_cacheQueue;
+
     /** @var bool  */
     protected bool $_stopped = false;
 
@@ -29,7 +32,9 @@ class NativeLoop extends AbstractLoop
         parent::__construct();
 
         $this->_queue = new SplPriorityQueue();
+        $this->_cacheQueue = new SplPriorityQueue();
         $this->_queue->setExtractFlags(SplPriorityQueue::EXTR_BOTH);
+        $this->_cacheQueue->setExtractFlags(SplPriorityQueue::EXTR_BOTH);
         $this->_readFds = [];
         $this->_writeFds = [];
     }
@@ -178,17 +183,17 @@ class NativeLoop extends AbstractLoop
     {
         parent::clear();
         $this->_queue = new SplPriorityQueue();
+        $this->_cacheQueue = new SplPriorityQueue();
         $this->_queue->setExtractFlags(SplPriorityQueue::EXTR_BOTH);
+        $this->_cacheQueue->setExtractFlags(SplPriorityQueue::EXTR_BOTH);
     }
 
     /** 执行 */
     protected function _tick(): void
     {
-        $count = $this->_queue->count();
-        while ($count --){
-            $data = $this->_queue->current();
-            $runTime = -$data['priority'];
-            $timerId = $data['data'];
+        foreach ($this->_queue as $item) {
+            $runTime = -$item['priority'];
+            $timerId = $item['data'];
             /** @var Timer $data */
             if($data = $this->_storage->get($timerId)){
                 $repeat = $data->getRepeat();
@@ -197,14 +202,20 @@ class NativeLoop extends AbstractLoop
                 if (($runTime - $timeNow) <= 0) {
                     \call_user_func($callback);
                     if($repeat !== false){
-                        $nextTime = $timeNow + $repeat;
-                        $this->_queue->insert($timerId, -$nextTime);
+                        $nextTime = \hrtime(true) * 1e-9 + $repeat;
+                        $this->_cacheQueue->insert($timerId, -$nextTime);
                     }else{
                         $this->delTimer($timerId);
                     }
-                    $this->_queue->next();
+                }else{
+                    $this->_cacheQueue->insert($timerId, -$runTime);
                 }
             }
+        }
+        foreach ($this->_cacheQueue as $item){
+            $priority = $item['priority'];
+            $timerId = $item['data'];
+            $this->_queue->insert($timerId, $priority);
         }
     }
 }

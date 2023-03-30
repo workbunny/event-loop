@@ -3,16 +3,26 @@ declare(strict_types=1);
 
 namespace WorkBunny\Tests\Events;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+
 trait StreamsTest
 {
+    public static function provider(): array
+    {
+        return [
+            [true],
+            [false]
+        ];
+    }
 
     /**
      * 测试socket接收数据时创建read stream handler
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testAddReadStreamHandlerWhenSocketReceivesData(bool $bio)
+    public function testAddReadStreamHandlerWhenSocketReceivesData(bool $bio): void
     {
         list ($input, $output) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -21,7 +31,7 @@ trait StreamsTest
         $loop = $this->getLoop();
         $timeout = $loop->addTimer(0.1,0.0, function () use ($input, $loop) {
             $loop->delReadStream($input);
-            $loop->destroy();
+            $loop->stop();
         });
 
         $called = 0;
@@ -29,23 +39,24 @@ trait StreamsTest
             ++$called;
             $loop->delReadStream($input);
             $loop->delTimer($timeout);
-            $loop->destroy();
+            $loop->stop();
         });
 
         fwrite($output, 'foo' . PHP_EOL);
 
-        $this->getLoop()->loop();
+        $this->getLoop()->run();
 
         $this->assertEquals(1, $called);
     }
 
     /**
      * 测试socket关闭时创建read stream handler
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testAddReadStreamHandlerWhenSocketCloses(bool $bio)
+    public function testAddReadStreamHandlerWhenSocketCloses(bool $bio): void
     {
         list ($input, $output) = $this->createSocketPair();
 
@@ -55,7 +66,7 @@ trait StreamsTest
         $loop = $this->getLoop();
         $timeout = $loop->addTimer(0.1,0.0, function () use ($input, $loop) {
             $loop->delReadStream($input);
-            $loop->destroy();
+            $loop->stop();
         });
 
         $called = 0;
@@ -63,23 +74,24 @@ trait StreamsTest
             ++$called;
             $loop->delReadStream($input);
             $loop->delTimer($timeout);
-            $loop->destroy();
+            $loop->stop();
         });
 
         fclose($output);
 
-        $this->getLoop()->loop();
+        $this->getLoop()->run();
 
         $this->assertEquals(1, $called);
     }
 
     /**
      * read stream重复创建后者无效
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testAddReadStreamIgnoresSecondAddReadStream(bool $bio)
+    public function testAddReadStreamIgnoresSecondAddReadStream(bool $bio): void
     {
         list ($input, $output) = $this->createSocketPair();
 
@@ -105,12 +117,13 @@ trait StreamsTest
     }
 
     /**
-     * 读流处理器多次触发 
+     * 读流处理器多次触发
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testReadStreamHandlerTriggeredMultiTimes(bool $bio)
+    public function testReadStreamHandlerTriggeredMultiTimes(bool $bio): void
     {
         list ($input, $output) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -132,11 +145,12 @@ trait StreamsTest
 
     /** 
      * 读流处理器可以引用接受数据
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void 
      */
-    public function testReadStreamHandlerReceivesDataFromStreamReference(bool $bio)
+    public function testReadStreamHandlerReceivesDataFromStreamReference(bool $bio): void
     {
         list ($input, $output) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -159,19 +173,18 @@ trait StreamsTest
 
         });
         $this->assertEquals('', $this->received);
-
         $this->assertRunFasterThan($this->tickTimeout * 2);
-
         $this->assertEquals('[hello]X', $this->received);
     }
 
     /**
-     * 在添加读流之后立即移除 
+     * 在添加读流之后立即移除
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testRemoveReadStreamInstantly(bool $bio)
+    public function testRemoveReadStreamInstantly(bool $bio): void
     {
         list ($input, $output) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -189,12 +202,13 @@ trait StreamsTest
     }
 
     /** 
-     * 读流读取后移除 
+     * 读流读取后移除
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testRemoveReadStreamAfterReading(bool $bio)
+    public function testRemoveReadStreamAfterReading(bool $bio): void
     {
         list ($input, $output) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -216,12 +230,13 @@ trait StreamsTest
     }
 
     /** 
-     * 测试socket连接成功时创建write stream handler 
+     * 测试socket连接成功时创建write stream handler
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testAddWriteStreamHandlerWhenSocketConnectionSucceeds(bool $bio)
+    public function testAddWriteStreamHandlerWhenSocketConnectionSucceeds(bool $bio): void
     {
         $server = stream_socket_server('127.0.0.1:0');
 
@@ -248,18 +263,19 @@ trait StreamsTest
             $this->getLoop()->destroy();
         });
 
-        $this->getLoop()->loop();
+        $this->getLoop()->run();
 
         $this->assertEquals(1, $called);
     }
 
     /** 
-     * socket连接被拒绝时添加write stream handler 
+     * socket连接被拒绝时添加write stream handler
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testAddWriteStreamHandlerWhenSocketConnectionRefused(bool $bio)
+    public function testAddWriteStreamHandlerWhenSocketConnectionRefused(bool $bio): void
     {
 
         // first verify the operating system actually refuses the connection and no firewall is in place
@@ -295,18 +311,19 @@ trait StreamsTest
             $this->getLoop()->destroy();
         });
 
-        $this->getLoop()->loop();
+        $this->getLoop()->run();
 
         $this->assertEquals(1, $called);
     }
 
     /** 
      * write stream 重复创建后者忽略
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testAddWriteStreamIgnoresSecondAddWriteStream(bool $bio)
+    public function testAddWriteStreamIgnoresSecondAddWriteStream(bool $bio): void
     {
         list ($input) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -324,12 +341,13 @@ trait StreamsTest
     }
     
     /** 
-     * 写流处理器的多次触发 
+     * 写流处理器的多次触发
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testWriteStreamHandlerTriggeredMultiTimes(bool $bio)
+    public function testWriteStreamHandlerTriggeredMultiTimes(bool $bio): void
     {
         list ($input) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -344,12 +362,13 @@ trait StreamsTest
     }
 
     /** 
-     * 添加写流后立即移除 
+     * 添加写流后立即移除
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testRemoveWriteStreamInstantly(bool $bio)
+    public function testRemoveWriteStreamInstantly(bool $bio): void
     {
         list ($input) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -363,12 +382,13 @@ trait StreamsTest
     }
 
     /** 
-     * 写流写入后移除 
+     * 写流写入后移除
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testRemoveWriteStreamAfterWriting(bool $bio)
+    public function testRemoveWriteStreamAfterWriting(bool $bio): void
     {
         list ($input) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -385,11 +405,12 @@ trait StreamsTest
 
     /** 
      * 移除读流
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void 
      */
-    public function testRemoveReadStreams(bool $bio)
+    public function testRemoveReadStreams(bool $bio): void
     {
         list ($input1, $output1) = $this->createSocketPair();
         list ($input2, $output2) = $this->createSocketPair();
@@ -418,11 +439,12 @@ trait StreamsTest
 
     /** 
      * 移除写流
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void 
      */
-    public function testRemoveWriteStreams(bool $bio)
+    public function testRemoveWriteStreams(bool $bio): void
     {
         list ($input1) = $this->createSocketPair();
         list ($input2) = $this->createSocketPair();
@@ -445,12 +467,13 @@ trait StreamsTest
     }
 
     /** 
-     * 仅移除读流 
+     * 仅移除读流
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testRemoveStreamForReadOnly(bool $bio)
+    public function testRemoveStreamForReadOnly(bool $bio): void
     {
         list ($input, $output) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -471,12 +494,13 @@ trait StreamsTest
     }
 
     /** 
-     * 仅移除写流 
+     * 仅移除写流
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testRemoveStreamForWriteOnly(bool $bio)
+    public function testRemoveStreamForWriteOnly(bool $bio): void
     {
         list ($input, $output) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -498,12 +522,13 @@ trait StreamsTest
     }
 
     /** 
-     * 移除未注册的流事件 
+     * 移除未注册的流事件
+     *
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testRemoveUnregisteredStream(bool $bio)
+    public function testRemoveUnregisteredStream(bool $bio): void
     {
         list ($stream) = $this->createSocketPair();
         stream_set_blocking($stream, $bio);
@@ -511,5 +536,55 @@ trait StreamsTest
         $this->getLoop()->delWriteStream($stream);
 
         $this->assertTrue(true);
+    }
+
+    /**
+     * 读流先于timer触发
+     *
+     * @dataProvider provider
+     * @param bool $bio
+     * @return void
+     */
+    public function testReadStreamBeforeTimer(bool $bio): void
+    {
+        list ($input, $output) = $this->createSocketPair();
+        stream_set_blocking($input, $bio);
+        stream_set_blocking($output, $bio);
+        fwrite($input, 'read' . PHP_EOL);
+
+        $this->expectOutputString('read' . PHP_EOL . 'timer' . PHP_EOL);
+        $this->getLoop()->addTimer(0.0,false, function () {
+            echo 'timer' . PHP_EOL;
+        });
+        $this->getLoop()->addReadStream($output, function($stream) {
+            $this->getLoop()->delReadStream($stream);
+            echo 'read' . PHP_EOL;
+        });
+        $this->tickLoop($this->tickTimeout);
+    }
+
+    /**
+     * 写流先于timer触发
+     *
+     * @dataProvider provider
+     * @param bool $bio
+     * @return void
+     */
+    public function testWriteStreamBeforeTimer(bool $bio): void
+    {
+        list ($input, $output) = $this->createSocketPair();
+        stream_set_blocking($input, $bio);
+        stream_set_blocking($output, $bio);
+        fwrite($input, 'write' . PHP_EOL);
+
+        $this->expectOutputString('write' . PHP_EOL . 'timer' . PHP_EOL);
+        $this->getLoop()->addTimer(0.0,false, function () {
+            echo 'timer' . PHP_EOL;
+        });
+        $this->getLoop()->addWriteStream(\STDOUT, function($stream) {
+            $this->getLoop()->delWriteStream($stream);
+            echo 'write' . PHP_EOL;
+        });
+        $this->tickLoop($this->tickTimeout);
     }
 }

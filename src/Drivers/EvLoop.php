@@ -119,7 +119,9 @@ class EvLoop extends AbstractLoop
     public function addSignal(int $signal, Closure $handler): void
     {
         if(!isset($this->_signals[$signal])){
-            $event = $this->_loop->signal($signal, $handler);
+            $event = $this->_loop->signal($signal, function (\EvSignal $evSignal, int $revents) use (&$handler){
+                \call_user_func($handler, $evSignal->signum);
+            });
             $this->_signals[$signal] = $event;
         }
     }
@@ -138,18 +140,19 @@ class EvLoop extends AbstractLoop
     /** @inheritDoc */
     public function addTimer(float $delay, float|false $repeat, Closure $handler): string
     {
-        $event = $this->_loop->timer($delay, $repeat, $func = function () use (&$event, &$func, $repeat, $handler) {
-            try {
+        /** @var EvTimer $event */
+        $event = $this->_loop->timer($delay, $repeat !== false ? $repeat : 0.0, $func = function () use (&$event, &$func, $repeat, $handler) {
+            if($this->getStorage()->exist($timerId = spl_object_hash($event))){
                 \call_user_func($handler);
-                $timerId = spl_object_hash($event);
                 if($repeat === 0.0){
-                    $this->_storage->set($timerId, $this->_loop->timer(0.0, $repeat, $func));
+                    $event->start();
                 }
                 if($repeat === false){
-                    $this->_storage->del($timerId);
+                    $this->delTimer($timerId);
                 }
-            }catch (\Throwable $throwable){
-                dump($throwable);
+            }else{
+                $event->clear();
+                unset($event);
             }
 
         });

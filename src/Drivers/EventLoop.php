@@ -62,7 +62,7 @@ class EventLoop extends AbstractLoop
         if(is_resource($stream) and !empty($this->_reads[$key = (int)$stream])){
             /** @var Event $event */
             $event = $this->_reads[$key];
-            $event->free();
+            $event->del();
             unset(
                 $this->_reads[$key],
                 $this->_readFds[$key]
@@ -91,7 +91,8 @@ class EventLoop extends AbstractLoop
             $event->del();
             unset(
                 $this->_writes[$key],
-                $this->_writeFds[$key]
+                $this->_writeFds[$key],
+                $event
             );
         }
     }
@@ -114,7 +115,7 @@ class EventLoop extends AbstractLoop
             /** @var Event $event */
             $event = $this->_signals[$signal];
             $event->del();
-            unset($this->_signals[$signal]);
+            unset($this->_signals[$signal], $event);
         }
     }
 
@@ -122,27 +123,22 @@ class EventLoop extends AbstractLoop
     public function addTimer(float $delay, float|false $repeat, Closure $handler): string
     {
         $event = new Event($this->_eventBase, -1, Event::TIMEOUT, function () use(&$event, $repeat, $handler){
-            $id = spl_object_hash($event);
-            \call_user_func($handler);
-            if($repeat === false){
-                $this->_storage->del($id);
-            }elseif ($repeat === 0.0){
-                $event->add($repeat);
+            if($this->getStorage()->exist($id = spl_object_hash($event))){
+                $repeat === false ? $this->delTimer($id) : $event->add($repeat);
+                \call_user_func($handler);
             }else{
-                $event = new Event($this->_eventBase, -1, Event::TIMEOUT | Event::PERSIST, $handler);
-                $event->add($repeat);
-                $this->_storage->set($id, $event);
+                $event->free();
+                unset($event);
             }
         });
         $event->add($delay);
-
         return $this->_storage->add(spl_object_hash($event), $event);
     }
 
     /** @inheritDoc */
     public function delTimer(string $timerId): void
     {
-        /** @var Event $events */
+        /** @var Event $event */
         if($event = $this->_storage->get($timerId)){
             $event->del();
             $this->_storage->del($timerId);

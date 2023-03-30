@@ -5,14 +5,15 @@ namespace WorkBunny\Tests;
 
 use EvIo;
 use http\Encoding\Stream;
+use PHPUnit\Framework\Attributes\TestDox;
 use WorkBunny\EventLoop\Drivers\AbstractLoop;
 use WorkBunny\EventLoop\Drivers\EvLoop;
 use WorkBunny\Tests\Events\StreamsTest;
 
 class EvLoopTest extends AbstractLoopTest
 {
-    /** 创建循环 */
-    public function createLoop(): EvLoop
+    /** @inheritDoc */
+    public function setLoop(): EvLoop
     {
         if (!class_exists('EvLoop')) {
             $this->markTestSkipped('ExtEvLoop tests skipped because ext-ev extension is not installed.');
@@ -21,13 +22,30 @@ class EvLoopTest extends AbstractLoopTest
         return new EvLoop();
     }
 
+    /** @inheritDoc */
+    public function setTickTimeout(): float
+    {
+        return 0.02;
+    }
+
+
+    public function testTimerPriority(): void
+    {
+        $this->markTestSkipped('TimerPriority of the EvLoop does not apply to this test.');
+    }
+
+    public function testDelayTimerPriority(): void
+    {
+        $this->markTestSkipped('DelayTimerPriority of the EvLoop does not apply to this test.');
+    }
+
     /**
      * @see AbstractLoopTest::testReadStreamBeforeTimer()
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testReadStreamBeforeTimer(bool $bio)
+    public function testReadStreamBeforeTimer(bool $bio): void
     {
         $this->markTestSkipped('The priority of the EvLoop does not apply to this test.');
     }
@@ -38,7 +56,7 @@ class EvLoopTest extends AbstractLoopTest
      * @param bool $bio
      * @return void
      */
-    public function testWriteStreamBeforeTimer(bool $bio)
+    public function testWriteStreamBeforeTimer(bool $bio): void
     {
         $this->markTestSkipped('The priority of the EvLoop does not apply to this test.');
     }
@@ -49,7 +67,7 @@ class EvLoopTest extends AbstractLoopTest
      * @param bool $bio
      * @return void
      */
-    public function testReadStreamAfterTimer(bool $bio)
+    public function testReadStreamAfterTimer(bool $bio): void
     {
         list ($input, $output) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -59,7 +77,7 @@ class EvLoopTest extends AbstractLoopTest
 
         $string = '';
 
-        $this->getLoop()->addTimer(0.0,0.0, function () use (&$string){
+        $this->getLoop()->addTimer(0.0,false, function () use (&$string){
             $string .= 'timer' . PHP_EOL;
         });
 
@@ -78,7 +96,7 @@ class EvLoopTest extends AbstractLoopTest
      * @param bool $bio
      * @return void
      */
-    public function testWriteStreamAfterTimer(bool $bio)
+    public function testWriteStreamAfterTimer(bool $bio): void
     {
 
         list ($input, $output) = $this->createSocketPair();
@@ -87,7 +105,7 @@ class EvLoopTest extends AbstractLoopTest
 
         $string = '';
 
-        $this->getLoop()->addTimer(0.0,0.0, function () use (&$string){
+        $this->getLoop()->addTimer(0.0,false, function () use (&$string){
             $string .= 'timer' . PHP_EOL;
         });
 
@@ -100,13 +118,13 @@ class EvLoopTest extends AbstractLoopTest
         $this->assertEquals('timer' . PHP_EOL . 'write' . PHP_EOL, $string);
     }
 
-    /** 
+    /**
      * @see StreamsTest::testReadStreamHandlerReceivesDataFromStreamReference()
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testReadStreamHandlerReceivesDataFromStreamReference(bool $bio)
+    public function testReadStreamHandlerReceivesDataFromStreamReference(bool $bio): void
     {
         list ($input, $output) = $this->createSocketPair();
         stream_set_blocking($input, $bio);
@@ -135,14 +153,14 @@ class EvLoopTest extends AbstractLoopTest
 
         $this->assertEquals('[hello]X', $this->received);
     }
-    
+
     /**
      * @see StreamsTest::testRemoveReadStreams()
      * @dataProvider provider
      * @param bool $bio
      * @return void
      */
-    public function testRemoveReadStreams(bool $bio)
+    public function testRemoveReadStreams(bool $bio): void
     {
         list ($input1, $output1) = $this->createSocketPair();
         list ($input2, $output2) = $this->createSocketPair();
@@ -176,7 +194,7 @@ class EvLoopTest extends AbstractLoopTest
      * @param bool $bio
      * @return void
      */
-    public function testRemoveWriteStreams(bool $bio)
+    public function testRemoveWriteStreams(bool $bio): void
     {
         list ($input1) = $this->createSocketPair();
         list ($input2) = $this->createSocketPair();

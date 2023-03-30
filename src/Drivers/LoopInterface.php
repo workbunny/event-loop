@@ -78,12 +78,18 @@ interface LoopInterface
     public function delWriteStream($stream): void;
 
     /**
-     * 创建定时处理器
-     * delay=0.0 && repeat=false : 在下一个loop周期内调用一次handler；
-     * delay=0.0 && repeat=0.0 : 在每一个loop周期内都将调用一次handler；
-     * delay=0.0 && repeat>0.0 : 立即开始间隔为repeat周期的定时任务调用handler；
-     * delay>0.0 && repeat=0.0 : 延迟delay调用一次handler；
-     * delay>0.0 && repeat>0.0 : 延迟delay调用一次handler后开始间隔为repeat周期的定时任务调用handler；
+     * @Future [delay=0.0, repeat=false]
+     *  在下一个周期执行，执行一次即销毁
+     * @ReFuture [delay=0.0, repeat=0.0]
+     *  在每一个周期执行，不会自动销毁
+     * @DelayReFuture [delay>0.0, repeat=0.0]
+     *  延迟delay秒后每一个周期执行，不会自动销毁
+     * @Delayer [delay>0.0, repeat=false]
+     *  延迟delay秒后执行，执行一次即销毁
+     * @Timer [delay=0.0, repeat>0.0]
+     *  在下一个周期开始每间隔repeat秒执行，不会自动销毁
+     * @DelayTimer [delay>0.0, repeat>0.0]
+     *  延迟delay秒后每间隔repeat秒执行，不会自动销毁
      *
      * @param float $delay
      * @param float|false $repeat
