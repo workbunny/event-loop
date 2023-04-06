@@ -25,7 +25,7 @@
 
 ## 使用
 
-注：本文档为 2.x 版本，旧版请点击 **[1.x 版本](https://github.com/workbunny/event-loop/tree/1.x)** 跳转
+注：本文档为 1.2.x 版本，旧版请点击 **[1.1.x 版本](https://github.com/workbunny/event-loop/tree/1.1.x)** 跳转
 
 ### 安装
 ```
