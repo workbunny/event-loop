@@ -10,7 +10,7 @@ class SwowLoopTest extends AbstractTestCase
     /** @inheritDoc */
     public function setLoop(): SwowLoop
     {
-        if (!extension_loaded('swoow')) {
+        if (!extension_loaded('swow')) {
             $this->markTestSkipped('SwowLoop tests skipped because ext-swow extension is not installed.');
         }
         return new SwowLoop();
