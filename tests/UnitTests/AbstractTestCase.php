@@ -29,6 +29,7 @@ abstract class AbstractTestCase extends TestCase
      */
     protected array $info = [];
     protected int $count = 0;
+    protected string $string = '';
     protected float $startTime = 0.0;
     protected float $endTime = 0.0;
 

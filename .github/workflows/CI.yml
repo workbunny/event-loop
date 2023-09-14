@@ -21,7 +21,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: event, ev
-          tools: phpunit:10, composer:v2
+          tools: phpunit:9, composer:v2
           coverage: none
       - run: composer install
       - run: vendor/bin/phpunit
