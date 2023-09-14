@@ -29,7 +29,7 @@
   },
   "require-dev": {
     "symfony/var-dumper": "^6.0",
-    "phpunit/phpunit": "^9.0",
+    "phpunit/phpunit": "^10.0",
     "swow/swow": "^1.0"
   },
   "suggest": {
